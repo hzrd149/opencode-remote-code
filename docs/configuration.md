@@ -19,6 +19,7 @@ Use these canonical names. Compatibility aliases are listed in
 | `user` | Local OS username | Remote username |
 | `key` | — | Local private-key file; expands `~` |
 | `password` | — | Password authentication; a configured key takes precedence |
+| `agentSocket` | Service `SSH_AUTH_SOCK` | Local SSH-agent socket when no key/password is configured; never forwarded |
 | `workdir` | Remote login home | Default remote working directory |
 | `platform` | `"auto"` | `"auto"`, `"posix"`, or `"windows"` |
 | `shell` | Auto-selected | `bash` on POSIX; `pwsh.exe` if found, otherwise `powershell.exe` on Windows |
@@ -75,7 +76,9 @@ are rejected.
 
 An optional `ssh` executable name/path is discarded. `ssh_config` is not read;
 `-F` does not load it. Use explicit hosts and credentials rather than relying on
-SSH aliases or agent configuration.
+SSH aliases. Authentication precedence is key, password, then SSH agent. Set
+`agentSocket` explicitly when the calling terminal's agent differs from the
+background service environment. The plugin never loads keys into the agent.
 
 The parser accepts `-o` keys `StrictHostKeyChecking`, `UserKnownHostsFile`,
 `ConnectTimeout`, `ServerAliveInterval`, `ServerAliveCountMax`, `HostKeyAlgorithms`,

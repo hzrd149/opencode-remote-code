@@ -115,6 +115,7 @@ if (options.help) {
  * assertions and finish in well under a second each.
  */
 const UNIT_SUITES = [
+  { script: "ssh-agent-auth.ts", label: "SSH-agent authentication suite", slow: false },
   { script: "system-prompt.ts", label: "remote context suite", slow: false },
   { script: "remote-path.ts", label: "remote path suite", slow: false },
   { script: "dialect.ts", label: "dialect suite", slow: false },

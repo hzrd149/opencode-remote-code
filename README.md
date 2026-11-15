@@ -62,7 +62,9 @@ use that in place of the local checkout path.
 - `workdir` is a **remote** path. It defaults to the SSH user's home; relative
   paths and `~` resolve there. Windows absolute paths need a drive letter, such
   as `C:/Users/me/project`.
-- Authentication uses `key` or `password`. The `ssh` string is parsed, not
+- Authentication uses `key`, `password`, or a local SSH agent (`agentSocket`,
+  otherwise the service's `SSH_AUTH_SOCK`), in that order. Agent forwarding is disabled.
+  The `ssh` string is parsed, not
   executed, and does not provide full OpenSSH command-line behavior.
 - Remote files are mirrored locally as needed. There is no remote LSP, and
   SFTP searches can be slower than running ripgrep on the server.
