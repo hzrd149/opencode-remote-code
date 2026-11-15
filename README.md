@@ -30,6 +30,68 @@ on the remote machine.
 
 ## Runtime target selection (opt-in)
 
+### Local CLI: `remote-opencode`
+
+Build/install this package to put `remote-opencode` on PATH (`npm run build && npm link`
+from a checkout). Requires Node.js 20+ and OpenCode V2 on PATH; tested with OpenCode
+2.2.7 and the pinned `@opencode/client` 2.2.7 API.
+
+Register the plugin once in your OpenCode configuration, with **no target address**:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": [
+    { "package": "/absolute/path/to/opencode-remote-code", "options": { "runtime": true } }
+  ]
+}
+```
+
+Use the installed package name instead of the absolute path for an npm installation.
+The registration must apply to `~/.opencode/remote-sessions/` (global config, or
+an ancestor config there). The CLI never edits your configuration. A legacy
+registration with a fixed `host`/`ssh` cannot be combined with runtime mode.
+
+```sh
+remote-opencode alice@server.example --workdir /srv/project
+remote-opencode server.example --user alice --port 2222 --workdir /srv/project
+remote-opencode server.example --key ~/.ssh/id_ed25519 --workdir /srv/project
+```
+
+Without `--key`, the CLI requires the calling terminal's `SSH_AUTH_SOCK` and sends
+it explicitly as `agentSocket` through `remote-code.runtime`. This overrides a
+missing/stale agent environment in the background service. The socket must remain
+accessible to that **local** service; it is not forwarded to the SSH host. Unlock
+the key in your agent first. Password prompting and encrypted-key passphrases are
+not implemented by the launcher.
+
+The CLI discovers/starts the local service with `Service.ensure()`, creates a local
+session in a stable directory keyed by host/port/user/workdir, initializes session
+plugins with `/remote status`, connects through the typed RPC, then runs
+`opencode <local-directory> --server <discovered-url> --session <id>`. Service
+authentication is passed in the child environment, never command-line arguments.
+The engine, model-provider credentials and session database stay local. Only
+SSH/SFTP reaches the target. The CLI accepts no remote OpenCode server option.
+
+A failed connection exits nonzero without opening the TUI. Failed remote sessions
+remain blocked rather than falling back to local file/shell tools. Each invocation
+creates a new session unless `--session ses_...` is supplied with the same target
+arguments. `--session` reconnects a failed/disconnected session (including after a
+service restart); an already connected session must first be explicitly disconnected
+with `/remote disconnect`. Closing the TUI does **not** disconnect or switch tools
+back to local mode. `/remote status` shows the current state.
+
+**Hostnames must be real DNS names or IP addresses.** The CLI does not read SSH
+config aliases, `IdentityAgent`, `ProxyJump` or `ProxyCommand`, and does not run
+`ssh -G` (which can execute `Match exec` configuration). Expand the hostname/user/port
+yourself or establish a local tunnel separately. Workdir defaults to the remote
+login home; quote paths containing spaces. Existing `launchers/remote-opencode.*`
+scripts retain their legacy directory-only behavior and are separate from this
+package's CLI binary. End-to-end launcher verification currently covers Linux;
+Windows terminal/agent attachment has not been verified.
+
+### RPC and in-session commands
+
 Configure the plugin once, without a target address:
 
 ```jsonc

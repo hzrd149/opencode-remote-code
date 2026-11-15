@@ -111,6 +111,7 @@ if (options.help) {
  * assertions and finish in well under a second each.
  */
 const UNIT_SUITES = [
+  { script: "cli.mjs", label: "CLI suite", slow: false },
   { script: "runtime-router.mjs", label: "runtime routing suite", slow: false },
   { script: "remote-path.mjs", label: "remote path suite", slow: false },
   { script: "dialect.mjs", label: "dialect suite", slow: false },
