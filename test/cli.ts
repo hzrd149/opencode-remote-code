@@ -9,7 +9,7 @@ import { parseArguments, sessionDirectory, assertLocalEndpoint, runCLI, attach }
 
 const parsed = parseArguments(["alice@[::1]", "--workdir", "C:/My Project", "--port", "2222"])
 assert.deepEqual(parseArguments(["host"]), {
-  host: "host", user: os.userInfo().username, port: 22, workdir: "~", key: undefined, sessionID: undefined,
+  host: "host", user: os.userInfo().username, port: 22, workdir: "~", key: undefined, agentSocket: undefined, sessionID: undefined,
 })
 assert.equal(parsed.host, "::1")
 assert.equal(parsed.user, "alice")

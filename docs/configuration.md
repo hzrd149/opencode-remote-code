@@ -10,11 +10,18 @@ reported and leaves OpenCode running without the remote tools.
 
 ## Options
 
+For per-session connections, set `runtime: true` and use `/remote connect host`.
+The username defaults to the local OS user on the service host; the remote workdir
+defaults to the SFTP login home. See [connection arguments](usage.md#connection-arguments)
+for slash-command and CLI flags. The `ssh` option syntax below applies to fixed
+configuration and RPC targets, not to the shell-style `/remote connect` command.
+
 Use these canonical names. Compatibility aliases are listed in
 [`OPTION_KEYS`](../src/config.ts).
 
 | Option | Default | Purpose |
 | --- | --- | --- |
+| `runtime` | `false` | Enable per-session `/remote` commands and RPC; do not combine with static `ssh`/`host` |
 | `ssh` | — | Parsed SSH command string; alternative to `host` |
 | `host` | — | Remote hostname or IP |
 | `port` | `22` | SSH port |

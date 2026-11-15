@@ -59,13 +59,19 @@ automatically; use `/reload` if needed.
 Open OpenCode in your usual project directory, or use an existing session. Enter:
 
 ```text
-/remote connect {"ssh":"alice@server.example","key":"~/.ssh/id_ed25519","workdir":"/srv/project"}
+/remote connect server.example
 /remote status
 ```
 
 Once connected, file and shell tools in **this session** operate on the remote
-machine, with `/srv/project` as the remote working directory. Other sessions are
-unaffected. Keep chatting in the same session to work remotely.
+machine. The username defaults to your local OS user (on the OpenCode service
+host), and the working directory defaults to the remote login home, resolved
+over SFTP. Other sessions are unaffected. To select a user and project explicitly:
+
+```text
+/remote disconnect
+/remote connect alice@server.example --workdir /srv/project --key ~/.ssh/id_ed25519
+```
 
 To return to local tools:
 
@@ -75,8 +81,9 @@ To return to local tools:
 
 To change SSH targets, disconnect first, then run `/remote connect` with the new
 target. For a Windows target, use a path such as `C:/Users/alice/project`.
-Omit `key` to use an SSH agent available to the OpenCode service, or supply
-`agentSocket` explicitly. Passwords must use the runtime RPC, not command text.
+Omit `--key` to use an SSH agent available to the OpenCode service, or supply
+`--agent-socket` explicitly. Passwords must use the runtime RPC, not command text.
+See [connection arguments](docs/usage.md#connection-arguments) for all supported flags.
 
 Once published, `@hzrd149/opencode-remote-code` can replace the local `package`
 path in the same global configuration; keep `"options": { "runtime": true }`.
@@ -126,7 +133,8 @@ not slash-command text. Remote subagent delegation is disabled.
   executed, and does not provide full OpenSSH command-line behavior.
 - Remote files are mirrored locally as needed. There is no remote LSP, and
   SFTP searches can be slower than running ripgrep on the server.
-- Use one session per target to avoid shared-mirror conflicts. Currently,
+- Runtime sessions have isolated mirrors; fixed-target sessions share them.
+  Avoid concurrent edits to the same remote files. Currently,
   `patch` delete hunks empty files rather than remove them; use `shell` to delete.
 
 ## Documentation
@@ -174,8 +182,8 @@ available. Inside the session, connect to a remote:
 /remote connect alice@server.example --workdir /srv/project
 ```
 
-Use your terminal's SSH agent, or add `"key":"~/.ssh/id_ed25519"` to the connection
-options. Check `/remote status` to confirm the connection. Development launcher
+Use your terminal's SSH agent, or add `--key ~/.ssh/id_ed25519` to the connection
+arguments. Check `/remote status` to confirm the connection. Development launcher
 arguments match the `remote-opencode` CLI and connect before opening the TUI:
 
 ```sh

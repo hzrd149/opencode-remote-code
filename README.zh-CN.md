@@ -56,33 +56,54 @@ OpenCode 会自动重新加载配置，必要时使用 `/reload`。
 在通常的项目目录打开 OpenCode，或使用已有会话，输入：
 
 ```text
-/remote connect {"ssh":"alice@server.example","key":"~/.ssh/id_ed25519","workdir":"/srv/project"}
+/remote connect server.example
 /remote status
 ```
 
-连接后，**当前会话**的文件和 shell 工具在远端执行，工作目录为 `/srv/project`。
-其他会话不受影响。在同一会话继续聊天即可操作远端。切回本地：
+连接后，**当前会话**的文件和 shell 工具在远端执行。用户名默认为运行 OpenCode
+服务的本地操作系统用户，工作目录默认为通过 SFTP 获取的远端登录主目录。
+其他会话不受影响。若需指定用户、项目和私钥，先断开再连接：
+
+```text
+/remote disconnect
+/remote connect alice@server.example --workdir /srv/project --key ~/.ssh/id_ed25519
+```
+
+在同一会话继续聊天即可操作远端。切回本地：
 
 ```text
 /remote disconnect
 ```
 
 更换目标时先断开，再执行新的 `/remote connect`。Windows 工作目录可以使用
-`C:/Users/alice/project`。省略 `key` 时使用 OpenCode 服务可访问的 SSH agent，
-也可显式指定 `agentSocket`。密码只能通过运行时 RPC 传递，不能放入命令文本。
+`C:/Users/alice/project`。省略 `--key` 时使用 OpenCode 服务可访问的 SSH agent，
+也可通过 `--agent-socket /path/to/agent` 显式指定。两者不能同时使用。
+`--user alice` 可指定用户名，`--port 2222` 可指定端口（默认 22）。
+含空格的路径需加引号，例如 `--workdir 'C:/My Project'`。
+IPv6 可使用 `alice@[::1]`；端口必须单独用 `--port`，不支持 `host:port`。
+参数支持引号和反斜杠转义，不执行 shell 或变量展开；Windows 路径建议使用正斜杠。
+`/remote connect --help` 显示帮助。密码只能通过运行时 RPC 传递，不能放入命令文本。
 发布后可将 `package` 路径替换为 `@hzrd149/opencode-remote-code`，保留
 `"options": { "runtime": true }`。
 
 ## 重要行为
 
+- 终端也可运行 `node /absolute/path/to/opencode-remote-code/dist/cli-main.js server.example`。
+  安装后的命令名为 `remote-opencode`，使用相同的连接参数，并支持 `--session ID`。
+  CLI 捕获调用终端的 `SSH_AUTH_SOCK`（可用 `--agent-socket` 覆盖），创建稳定的本地
+  会话目录，通过 RPC 连接后打开界面；无需模型调用。详细参数见[使用指南](docs/usage.md#connection-arguments)。
+- 连接中断、失败或服务重启后，远程会话的文件与 shell 工具会阻止执行，直到重新连接
+  或显式断开；不会静默切回本地。远程会话禁用子 agent 委派。
 - **运行时模式按会话切换。** 若需固定目标，可省略 `runtime` 并在插件选项中配置
   `ssh`/`host`。该模式的 `activateIn` 匹配本地会话目录；省略时固定目标在所有目录生效。
 - `workdir` 是**远程**路径，默认是 SSH 用户的主目录；相对路径和 `~` 均
   相对于该目录解析。Windows 绝对路径必须带盘符，例如 `C:/Users/me/project`。
-- 使用 `key` 或 `password` 认证。`ssh` 字符串仅被解析，不会直接执行，
+- 认证优先级为 `key`、`password`、本地 SSH agent（`agentSocket` 或服务的
+  `SSH_AUTH_SOCK`），不启用 agent 转发。`ssh` 字符串仅被解析，不会直接执行，
   也不支持完整的 OpenSSH 命令行行为。
 - 文件按需镜像到本地。不支持远程 LSP；SFTP 搜索可能比服务器上的 ripgrep 慢。
-- 建议每个目标只使用一个会话，避免共享镜像冲突。目前 `patch` 的删除块会
+- 运行时会话的镜像相互隔离，固定目标会话共享镜像；避免同时编辑同一远端文件。
+  目前 `patch` 的删除块会
   清空文件而非删除文件；需要删除时使用 `shell`。
 
 ## 文档
