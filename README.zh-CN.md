@@ -5,7 +5,9 @@
 个人分支的 npm 包名为 **`@hzrd149/opencode-remote-code`**。发布配置保留在 `main`，
 功能分支用于向上游提交独立 PR。
 
-Fork 自 [zz6zz666/opencode-remote-code](https://github.com/zz6zz666/opencode-remote-code)。
+Fork 自 [vibed-this/opencode-remote-code](https://github.com/vibed-this/opencode-remote-code)，
+后者 Fork 自最初的 OpenCode V1 插件
+[zz6zz666/opencode-remote-code](https://github.com/zz6zz666/opencode-remote-code)。
 
 一款 OpenCode 插件，让 AI Agent 能够通过 SSH 直接操控远程机器——**远程端零依赖**，仅需 SSH 守护
 进程即可。无需在远程安装任何 agent、运行时或依赖。

@@ -5,7 +5,9 @@
 Personal fork published as **`@hzrd149/opencode-remote-code`**. Fork-specific
 packaging lives on `main`; feature branches are kept focused for upstream PRs.
 
-Forked from [zz6zz666/opencode-remote-code](https://github.com/zz6zz666/opencode-remote-code).
+Forked from [vibed-this/opencode-remote-code](https://github.com/vibed-this/opencode-remote-code),
+which forked the original OpenCode V1 plugin,
+[zz6zz666/opencode-remote-code](https://github.com/zz6zz666/opencode-remote-code).
 
 An OpenCode plugin that lets AI agents operate remote machines over SSH — with **zero footprint**
 on the remote side. The remote machine only needs `sshd`; no agent, runtime, or dependency
