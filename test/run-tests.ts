@@ -23,7 +23,7 @@
  * Usage: pnpm exec tsx test/run-tests.ts [--dialect=posix|windows|both] [--verbose]
  *                                [--skip-plugin] [--skip-slow]
  *
- *   --dialect=X    which remote dialect(s) to exercise (default: both)
+ *   --dialect=X    remote dialect(s) (default: both on Windows, posix elsewhere)
  *   --skip-plugin  do not load dist/index.js (no plugin smoke test at all)
  *   --skip-slow    skip the ssh-pool lifecycle suite (it waits ~25s on timers)
  */
@@ -56,7 +56,7 @@ const USAGE =
 /* -------------------------------------------------------------------------- */
 
 function parseArgs(argv: string[]) {
-  const parsed = { dialect: "both", dialects: [] as string[], verbose: false, skipPlugin: false, skipSlow: false, help: false }
+  const parsed = { dialect: process.platform === "win32" ? "both" : "posix", dialects: [] as string[], verbose: false, skipPlugin: false, skipSlow: false, help: false }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
     if (arg === "--dialect") {

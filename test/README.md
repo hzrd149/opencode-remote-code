@@ -1,20 +1,20 @@
 # Test harness
 
 The harness starts a local `ssh2.Server` with password authentication and real
-SFTP operations. No external SSH target is needed. Build first: suites import
-the compiled plugin from `dist/`.
+SFTP operations. No external SSH target is needed. `pnpm test` builds first:
+suites import the compiled plugin from `dist/`.
 
 ```sh
-pnpm run build
-MOCK_SSH_BASH=/bin/bash pnpm test --dialect=posix  # Linux/macOS
-pnpm test                    # both dialects; requires Windows + PowerShell
+pnpm test                    # POSIX on Linux/macOS; both dialects on Windows
+pnpm test --dialect=posix     # explicitly select POSIX
+pnpm test --dialect=both      # requires Windows + PowerShell
 ```
 
 ## Runner options
 
 | Option | Effect |
 | --- | --- |
-| `--dialect=posix\|windows\|both` | Remote dialect matrix; default `both` |
+| `--dialect=posix\|windows\|both` | Remote dialect matrix; default `both` on Windows, `posix` elsewhere |
 | `--skip-slow` | Skip SSH pool lifecycle checks (~25 seconds) |
 | `--skip-plugin` | Run unit and mock-server checks without plugin smoke tests |
 | `--verbose` | Print SSH/SFTP requests and full child-suite output |
@@ -25,9 +25,9 @@ prints PASS/FAIL/SKIP totals and exits nonzero on failure. Three POSIX-specific
 server checks are skipped for Windows (stderr redirection, exit syntax and root
 path semantics).
 
-The mock defaults to Git for Windows Bash; set `MOCK_SSH_BASH` on other hosts.
-Some unit assertions also assume Windows host paths and currently fail on Linux
-(activation backslashes and simulated Windows long mirror paths).
+The mock defaults to Git for Windows Bash on Windows and `/bin/bash` elsewhere;
+set `MOCK_SSH_BASH` to override it. Windows remote path and encoding unit tests
+run on every host; real Windows long-path round trips require a Windows host.
 
 Suites can also run individually, for example `pnpm exec tsx test/dialect.ts`.
 

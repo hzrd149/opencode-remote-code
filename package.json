@@ -35,7 +35,7 @@
     "prepack": "pnpm run build",
     "dev": "tsc --watch",
     "lint": "tsc --noEmit && tsc -p tsconfig.tools.json",
-    "test": "tsx test/run-tests.ts"
+    "test": "pnpm run build && tsx test/run-tests.ts"
   },
   "peerDependencies": {
     "@opencode/plugin": "^2.1.2"

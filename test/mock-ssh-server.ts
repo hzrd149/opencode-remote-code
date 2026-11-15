@@ -64,7 +64,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url))
 
 export const HOSTKEY_PATH = path.join(HERE, ".hostkey")
 export const DEFAULT_ROOT_DIR = path.join(HERE, "tmp", "remote")
-export const DEFAULT_BASH = "C:\\Program Files\\Git\\usr\\bin\\bash.exe"
+export const DEFAULT_BASH = process.platform === "win32"
+  ? "C:\\Program Files\\Git\\usr\\bin\\bash.exe"
+  : "/bin/bash"
 export const DEFAULT_USER = "testuser"
 export const DEFAULT_PASSWORD = "testpass"
 

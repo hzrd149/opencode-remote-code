@@ -377,13 +377,15 @@ await check("collision: a case-sensitive local host keeps a.ts and A.ts distinct
 // ===========================================================================
 const LONG_REMOTE = `/data/${"d".repeat(60)}/${"e".repeat(60)}/${"f".repeat(60)}/${"g".repeat(60)}/file.ts`
 
-await check("long path: win32 local host gets the \\\\?\\ prefix and still round-trips", () => {
+await check("long path: win32 policy adds the \\\\?\\ prefix", () => {
   const m = mapper("posix", "/data", { localPlatform: "win32" })
   const local = m.toLocal(LONG_REMOTE)
   assert.ok(local.length > 250, `expected a >250 char local path, got ${local.length}`)
   assert.ok(local.startsWith("\\\\?\\"), `expected the extended-length prefix, got ${JSON.stringify(local.slice(0, 12))}`)
   assert.equal(local.slice(4).includes("/"), false, "a \\\\?\\ path must use backslashes only")
-  assert.equal(m.toRemote(local), LONG_REMOTE)
+  // localPlatform simulates prefix policy, not node:path semantics. Only a
+  // Windows host can consume this Windows-formatted local path directly.
+  if (process.platform === "win32") assert.equal(m.toRemote(local), LONG_REMOTE)
   // Short paths stay plain on win32 too.
   const short = m.toLocal("/data/short.ts")
   assert.equal(short.startsWith("\\\\?\\"), false)

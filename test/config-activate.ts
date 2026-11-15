@@ -95,11 +95,12 @@ await check("isWithinActivateIn: parent / unrelated directory is NOT inside", ()
   assert.equal(isWithinActivateIn([sessions], path.join(os.tmpdir(), "elsewhere")), false)
 })
 
-await check("isWithinActivateIn: backslashes and forward slashes are equivalent", () => {
+await check("isWithinActivateIn: separators follow the local host", () => {
   const slashed = sessions.replaceAll("\\", "/")
   const backslashed = sessions.replaceAll("/", "\\")
   assert.equal(isWithinActivateIn([slashed], `${slashed}/a`), true)
-  assert.equal(isWithinActivateIn([backslashed], `${slashed}/a`), true)
+  // Backslashes are literal filename characters on POSIX, not separators.
+  assert.equal(isWithinActivateIn([backslashed], `${slashed}/a`), isWin)
 })
 
 await check("isWithinActivateIn: case-insensitive on Windows only", () => {

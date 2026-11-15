@@ -10,15 +10,15 @@ POSIX and Windows remotes. See `README.md` for configuration and usage and
 pnpm install --frozen-lockfile
 pnpm run build
 pnpm run lint
-MOCK_SSH_BASH=/bin/bash pnpm test --dialect=posix
+pnpm test
 npm pack --dry-run
 ```
 
-Build before testing: suites import `dist/`. `pnpm run build` also copies prompt
+`pnpm test` builds before testing: suites import `dist/`. `pnpm run build` also copies prompt
 fragments via `scripts/postbuild.ts`; running `tsc` alone is insufficient.
-Windows integration tests require Windows with PowerShell; run `pnpm test` there
-to exercise both dialects. See the test guide for Windows-host assumptions that
-currently prevent a fully green Linux run.
+Windows integration tests require Windows with PowerShell; `pnpm test` exercises
+both dialects there and POSIX on Linux/macOS. Build first when running individual
+suites directly. See the test guide for host requirements.
 
 ## Architecture and invariants
 
