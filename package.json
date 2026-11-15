@@ -24,6 +24,7 @@
   },
   "files": [
     "dist",
+    "docs",
     "index.js",
     "launchers",
     "README.zh-CN.md",
