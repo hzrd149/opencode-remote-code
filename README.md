@@ -59,13 +59,19 @@ automatically; use `/reload` if needed.
 Open OpenCode in your usual project directory, or use an existing session. Enter:
 
 ```text
-/remote connect {"ssh":"alice@server.example","key":"~/.ssh/id_ed25519","workdir":"/srv/project"}
+/remote connect server.example
 /remote status
 ```
 
 Once connected, file and shell tools in **this session** operate on the remote
-machine, with `/srv/project` as the remote working directory. Other sessions are
-unaffected. Keep chatting in the same session to work remotely.
+machine. The username defaults to your local OS user (on the OpenCode service
+host), and the working directory defaults to the remote login home, resolved
+over SFTP. Other sessions are unaffected. To select a user and project explicitly:
+
+```text
+/remote disconnect
+/remote connect alice@server.example --workdir /srv/project --key ~/.ssh/id_ed25519
+```
 
 To return to local tools:
 
@@ -75,8 +81,9 @@ To return to local tools:
 
 To change SSH targets, disconnect first, then run `/remote connect` with the new
 target. For a Windows target, use a path such as `C:/Users/alice/project`.
-Omit `key` to use an SSH agent available to the OpenCode service, or supply
-`agentSocket` explicitly. Passwords must use the runtime RPC, not command text.
+Omit `--key` to use an SSH agent available to the OpenCode service, or supply
+`--agent-socket` explicitly. Passwords must use the runtime RPC, not command text.
+See [connection arguments](docs/usage.md#connection-arguments) for all supported flags.
 
 Once published, `@hzrd149/opencode-remote-code` can replace the local `package`
 path in the same global configuration; keep `"options": { "runtime": true }`.
@@ -95,6 +102,20 @@ node /absolute/path/to/opencode-remote-code/dist/cli-main.js alice@server.exampl
 The installed executable is `remote-opencode`. It captures the terminal's
 `SSH_AUTH_SOCK`, creates a stable local session directory, connects through typed
 RPC, and attaches to that session. No model call is needed to connect.
+In-session controls are `/remote status`, `/remote disconnect`, and
+`/remote connect alice@server.example --workdir /srv/project`.
+Host-only connections such as `/remote connect server.example` or
+`/remote connect 192.168.1.20` default to your local OS username and the remote
+login home (resolved over SFTP). Quote paths with spaces:
+`/remote connect alice@host --workdir '/path with spaces'`.
+Use `--port 2222`, `--user alice`, `--agent-socket /path/to/agent`, or `--key /path/to/key`
+as needed. The CLI accepts the same target options (`--agent-socket` overrides its
+calling terminal's `SSH_AUTH_SOCK`); the slash command uses the service's configured
+authentication unless explicitly overridden. IPv6 may be bare or bracketed
+(`alice@[::1]`); specify ports separately with `--port`, never `host:port`.
+Arguments support quotes and backslash escapes, with no shell evaluation or
+variable expansion. `/remote connect --help` shows usage. The previous JSON target
+form remains supported; passwords must use RPC rather than slash-command text.
 Connections are session-specific; interrupted or failed remote sessions block
 file/shell tools until reconnect or explicit disconnect. Passwords use RPC,
 not slash-command text. Remote subagent delegation is disabled.
@@ -112,7 +133,8 @@ not slash-command text. Remote subagent delegation is disabled.
   executed, and does not provide full OpenSSH command-line behavior.
 - Remote files are mirrored locally as needed. There is no remote LSP, and
   SFTP searches can be slower than running ripgrep on the server.
-- Use one session per target to avoid shared-mirror conflicts. Currently,
+- Runtime sessions have isolated mirrors; fixed-target sessions share them.
+  Avoid concurrent edits to the same remote files. Currently,
   `patch` delete hunks empty files rather than remove them; use `shell` to delete.
 
 ## Documentation
@@ -157,11 +179,11 @@ directory at `tmp_test_artifacts/dev`; your usual providers and credentials rema
 available. Inside the session, connect to a remote:
 
 ```text
-/remote connect {"ssh":"alice@server.example","workdir":"/srv/project"}
+/remote connect alice@server.example --workdir /srv/project
 ```
 
-Use your terminal's SSH agent, or add `"key":"~/.ssh/id_ed25519"` to the connection
-options. Check `/remote status` to confirm the connection. Development launcher
+Use your terminal's SSH agent, or add `--key ~/.ssh/id_ed25519` to the connection
+arguments. Check `/remote status` to confirm the connection. Development launcher
 arguments match the `remote-opencode` CLI and connect before opening the TUI:
 
 ```sh

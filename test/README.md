@@ -13,7 +13,10 @@ pnpm test --dialect=both      # requires Windows + PowerShell
 ## Runner options
 
 The default suite includes SSH-agent authentication, runtime routing and CLI unit
-checks. Optional real OpenCode V2 host tests use isolated configuration, a local
+checks. CLI checks cover caller-agent propagation, connect-before-attach ordering,
+failed connections, service/session selection, and child-process arguments and
+exit status. Runtime routing includes stale calls after reconnecting.
+Optional real OpenCode V2 host tests use isolated configuration, a local
 SSH/SFTP server and temporary agents, without external model calls:
 
 ```sh
@@ -28,6 +31,8 @@ The runtime host test also uses a deterministic local chat endpoint to exercise
 all seven remote tools through Core's model/tool execution and output validation,
 plus native local delegation. This catches failures that direct `tool.execute()`
 probes bypass, including inherited output schemas and non-JSON result metadata.
+The runtime host test also exercises `/remote connect` with host-only defaults
+(local OS username and SFTP login home), quoted workdirs, and legacy JSON input.
 
 | Option | Effect |
 | --- | --- |

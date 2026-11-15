@@ -2,6 +2,7 @@
 import assert from "node:assert/strict"
 import fs from "node:fs/promises"
 import path from "node:path"
+import os from "node:os"
 import { spawn } from "node:child_process"
 import { once } from "node:events"
 import { fileURLToPath } from "node:url"
@@ -12,7 +13,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 await fs.mkdir(path.join(root, "tmp_test_artifacts"), { recursive: true })
 const tmp = await fs.mkdtemp(path.join(root, "tmp_test_artifacts/runtime-"))
 const report = path.join(tmp, "report.json")
-const remote = await startMockServer({ rootDir: path.join(tmp, "remote"), bashPath: "/bin/bash" })
+const remote = await startMockServer({ rootDir: path.join(tmp, "remote"), bashPath: "/bin/bash", user: os.userInfo().username })
 await fs.writeFile(path.join(tmp, "remote", "sentinel"), "REMOTE ONLY")
 await fs.writeFile(path.join(tmp, "sentinel"), "LOCAL ONLY")
 const model = await startToolModel([
@@ -141,7 +142,31 @@ try {
   await request(`/api/session/${a}/command`, { name: "remote", text: "status" })
   await request(`/api/session/${a}/command`, { name: "remote", text: "disconnect" })
   assert.equal((await command(a, { action: "status" })).phase, "local")
-  console.log("PASS runtime real host: validated model/tool pipeline (all seven remote tools and local delegation), RPC, session isolation, stale calls, failure isolation, disconnect")
+  await request(`/api/session/${a}/command`, { name: "remote", text: `connect ${remote.host} --port ${remote.port}` })
+  const defaults = await command(a, { action: "status" })
+  assert.equal(defaults.phase, "connected")
+  assert.equal(defaults.user, os.userInfo().username)
+  assert.equal(defaults.workdir, "/")
+  assert.match((await command(a, { action: "tool", args: { path: "sentinel" } })).content, /REMOTE ONLY/)
+  await request(`/api/session/${a}/command`, { name: "remote", text: "disconnect" })
+  for (const [text, error] of [
+    ["connect host --unknown value", /Unknown option/],
+    ["connect host --port", /Missing or invalid value/],
+    ["connect host --workdir 'unfinished", /Unterminated quote/],
+    ["connect host:2222", /specify ports with --port/],
+  ] as const) {
+    await assert.rejects(request(`/api/session/${a}/command`, { name: "remote", text }), error)
+    assert.equal((await command(a, { action: "status" })).phase, "local")
+  }
+  await request(`/api/session/${a}/command`, { name: "remote", text: "connect --help" })
+  assert.equal((await command(a, { action: "status" })).phase, "local")
+  await fs.mkdir(path.join(tmp, "remote", "path with spaces"))
+  await fs.writeFile(path.join(tmp, "remote", "path with spaces", "quoted"), "QUOTED REMOTE")
+  await request(`/api/session/${a}/command`, { name: "remote", text: `connect ${remote.user}@${remote.host} --port ${remote.port} --workdir '/path with spaces'` })
+  assert.equal((await command(a, { action: "status" })).workdir, "/path with spaces")
+  assert.match((await command(a, { action: "tool", args: { path: "quoted" } })).content, /QUOTED REMOTE/)
+  await request(`/api/session/${a}/command`, { name: "remote", text: "disconnect" })
+  console.log("PASS runtime real host: validated model/tool pipeline (all seven remote tools and local delegation), RPC, session isolation, stale calls, failure isolation, disconnect, shell-style connect arguments")
 } finally {
   const exit = child.exitCode === null ? once(child, "exit") : Promise.resolve()
   child.kill("SIGTERM")
