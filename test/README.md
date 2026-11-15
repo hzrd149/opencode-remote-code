@@ -365,3 +365,23 @@ Windows 那一支（`plugin-smoke-windows.mjs`）**不软跳过**：它是端到
 假 `ctx` 里 `tool.transform` / `session.hook` 都返回 `{ dispose }`（V2 的 `Registration`），
 `options.mirror` 指向 `test/tmp/mirror`，所以插件不会写用户目录下的
 `~/.opencode/mirrors`。
+# Runtime routing tests
+
+After `npm run build`, `node test/runtime-router.mjs` checks session isolation,
+failure blocking, stale snapshots, explicit disconnect, in-flight operations,
+restart markers, and cleanup. It is included in `run-tests.mjs`.
+
+`node test/runtime-host.mjs` is an additional Linux integration test requiring an
+installed V2 `opencode` executable (`OPENCODE_BIN` can override it). It starts a
+private in-memory OpenCode server and the mock SSH/SFTP server, uses no model,
+and leaves user configuration untouched. It exercises the actual RPC and native
+tool editor APIs, all seven remote tools, local native delegation, multiple
+sessions sharing a location/target, stale snapshots, failed authentication and
+disconnect. Temporary configuration/data/mirrors are confined to
+`tmp_test_artifacts/` and removed when the test finishes. The fixture plugin under
+`test/fixtures/runtime-probe/` must not be enabled outside this test.
+
+The complete POSIX runner still has two existing Windows-host assumptions on
+Linux: backslash activation-scope matching and simulated long Windows mirror
+paths. These are unrelated to runtime routing; the POSIX mock-server and legacy
+plugin smoke sections pass.
