@@ -51,6 +51,18 @@ export function createShellTool(ctx: RemoteToolContext): RemoteToolDefinition {
   return {
     name: "shell",
     description: `Execute commands in ${shellName} on the remote machine.`,
+    // Also declare the structured result when registered directly in legacy mode.
+    output: {
+      type: "object",
+      properties: {
+        exit: { type: "number" },
+        output: { type: "string" },
+        truncated: { type: "boolean" },
+        status: { type: "string", enum: ["completed"] },
+      },
+      required: ["exit", "output", "truncated", "status"],
+      additionalProperties: false,
+    },
 
     input: {
       type: "object",
@@ -151,12 +163,14 @@ export function createShellTool(ctx: RemoteToolContext): RemoteToolDefinition {
       }
 
       return {
+        output: { exit: result.exitCode, output, truncated: false, status: "completed" },
         content: output,
         metadata: {
+          status: "completed",
           title: args.description || "shell",
           exit: result.exitCode,
-          description: args.description,
-          stderr: stderr.trim() !== "" ? stderr : undefined,
+          ...(args.description !== undefined ? { description: args.description } : {}),
+          ...(stderr.trim() !== "" ? { stderr } : {}),
         },
       }
     },

@@ -97,13 +97,14 @@ interface Dependencies {
   attach: typeof attach
   env: NodeJS.ProcessEnv
   home: string
+  directory: typeof sessionDirectory
   report: (text: string) => void
 }
 
 export async function runCLI(args: string[], overrides: Partial<Dependencies> = {}): Promise<number> {
   const options = parseArguments(args)
   const deps: Dependencies = { ensure: () => Service.ensure(), attach, env: process.env,
-    home: os.homedir(), report: text => console.error(text), ...overrides }
+    home: os.homedir(), directory: sessionDirectory, report: text => console.error(text), ...overrides }
   if (!options) { deps.report(HELP); return 0 }
   const target: RuntimeTarget = { host: options.host, user: options.user, port: options.port, workdir: options.workdir }
   if (options.key) target.key = path.resolve(options.key.startsWith("~/") ? path.join(deps.home, options.key.slice(2)) : options.key)
@@ -115,7 +116,7 @@ export async function runCLI(args: string[], overrides: Partial<Dependencies> = 
   const endpoint = await deps.ensure()
   assertLocalEndpoint(endpoint)
   const client = OpenCode.make({ baseUrl: endpoint.url, headers: Service.headers(endpoint) })
-  const directory = sessionDirectory(options, deps.home)
+  const directory = deps.directory(options, deps.home)
   await mkdir(directory, { recursive: true, mode: 0o700 })
   const location = { directory }
   const session = options.sessionID

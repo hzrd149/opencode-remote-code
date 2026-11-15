@@ -38,8 +38,21 @@ export async function setupRuntime(ctx: PluginContext) {
         if (!original) continue // Builtins may arrive after setup; transforms replay.
         native.add(name)
         editor.update(name, tool => {
+          // The shared router returns native results locally, but remote tools
+          // supply rendered content/metadata, not the builtin's structured output.
+          // Retaining its output codec makes Core reject successful remote calls
+          // after they have already executed (including writes).
+          // Shell supplies the native structured result for Core's shell hooks.
+          if (name !== "shell") delete tool.output
           tool.execute = (input, call) => router.route(snapshot, call.sessionID,
-            () => original.execute(input, call),
+            async () => {
+              const result = await original.execute(input, call)
+              if (name === "shell") return result
+              // Core also rejects an output value when there is no output codec.
+              // Native rendered content and metadata still pass through intact.
+              const { output: _output, ...rendered } = result
+              return rendered
+            },
             async backend => {
               const remote = backend.tools.find(candidate => candidate.name === name)!
               const args = { ...(input as Record<string, unknown>) }

@@ -76,6 +76,7 @@ export function createPermissionGateway(permission: PermissionDomain): Permissio
 
 /** What each tool `execute` resolves to (V2 `Tool.Result` subset we use). */
 export interface RemoteToolResult {
+  output?: unknown
   content: string
   metadata?: Record<string, any>
 }
@@ -90,5 +91,6 @@ export interface RemoteToolDefinition {
   name: string
   description: string
   input: Record<string, unknown>
+  output?: Record<string, unknown>
   execute(input: any, context: ToolCallIdentity): Promise<RemoteToolResult>
 }

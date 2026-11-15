@@ -14,7 +14,8 @@ export default Plugin.define({
         let result
         try {
           const rpc = ctx.rpc(RemoteRuntime)
-          if (input.action === "connect") result = await rpc.connect({ sessionID, target: input.target })
+          if (input.action === "schemas") result = (await ctx.tool.list()).filter(t => ["read", "write", "edit", "patch", "shell", "glob", "grep"].includes(t.id)).map(t => ({ name: t.id, declaresOutput: t.output !== undefined }))
+          else if (input.action === "connect") result = await rpc.connect({ sessionID, target: input.target })
           else if (input.action === "status") result = await rpc.status({ sessionID })
           else if (input.action === "disconnect") result = await rpc.disconnect({ sessionID })
           else {

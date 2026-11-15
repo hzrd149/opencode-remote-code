@@ -160,8 +160,17 @@ available. Inside the session, connect to a remote:
 ```
 
 Use your terminal's SSH agent, or add `"key":"~/.ssh/id_ed25519"` to the connection
-options. Check `/remote status` to confirm the connection. Additional OpenCode
-flags can be passed through, for example `pnpm dev --continue`.
+options. Check `/remote status` to confirm the connection. Development launcher
+arguments match the `remote-opencode` CLI and connect before opening the TUI:
+
+```sh
+pnpm dev alice@server.example --workdir /srv/project --port 2222 --key ~/.ssh/id_ed25519
+pnpm dev --help
+```
+
+All CLI options, including `--user` and `--session`, are supported. Target-specific
+development sessions live beneath `tmp_test_artifacts/dev` and use a private
+server that stops when the TUI exits. Use a development session ID with `--session`.
 After source changes, exit and rerun `pnpm dev` to load a fresh build.
 `pnpm dev:watch` runs only the TypeScript compiler in watch mode.
 
