@@ -45,7 +45,7 @@ PowerShell（Windows 10+ 自带 5.1），别的一概不需要。
 ## 📋 前置要求
 
 - **OpenCode V2**（本分支面向 `@opencode/plugin` ^2.1.2）
-- **Node.js ≥ 20**（Bun 亦可）——用于构建插件
+- **Node.js ≥ 20**——支持的运行时；**Node.js 26** 是推荐的默认开发版本（`nvm use` 通过 `.nvmrc` 选择该版本）
 - 远程机器上运行的 **SSH 服务**（**唯一的远程依赖**）
   - POSIX 远端：任意 `sh`/`bash` 登录 shell
   - Windows 远端：**OpenSSH for Windows** + PowerShell 5.1 或 7

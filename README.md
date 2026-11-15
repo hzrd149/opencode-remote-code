@@ -48,7 +48,7 @@ PowerShell (5.1 ships with Windows 10+), and nothing else.
 ## 📋 Prerequisites
 
 - **OpenCode V2** (this fork targets `@opencode/plugin` ^2.1.2)
-- **Node.js ≥ 20** (or Bun) — for building the plugin
+- **Node.js ≥ 20** — supported runtime; **Node.js 26** is the recommended/default development version (`nvm use` selects it via `.nvmrc`)
 - An **SSH daemon** on the remote machine (the *only* remote requirement)
   - POSIX remote: any `sh`/`bash` login shell
   - Windows remote: **OpenSSH for Windows** + PowerShell 5.1 or 7
