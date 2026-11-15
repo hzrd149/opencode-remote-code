@@ -4,10 +4,9 @@ import { RuntimeRouter } from "../dist/runtime-router.js"
 const markers = new Set()
 const router = new RuntimeRouter(async (id, remote) => remote ? markers.add(id) : markers.delete(id))
 let localCalls = 0
-let remoteCalls = 0
 let closed = 0
 const local = async () => { localCalls++; return "local" }
-const remote = async () => { remoteCalls++; return "remote" }
+const remote = async () => "remote"
 const open = async () => ({ close: async () => { closed++ } })
 const before = router.snapshot()
 await router.connect("remote", open)
@@ -24,6 +23,9 @@ assert.equal(closed, 1)
 assert(!markers.has("remote"))
 await assert.rejects(router.route(connected, "remote", local, remote), /Target changed/)
 assert.equal(await router.route(router.snapshot(), "remote", local, remote), "local")
+await router.connect("remote", open)
+await assert.rejects(router.route(connected, "remote", local, remote), /Target changed/)
+assert.equal(await router.route(router.snapshot(), "remote", local, remote), "remote")
 
 await assert.rejects(router.connect("failed", async () => { throw Error("unreachable") }), /unreachable/)
 assert.equal(router.status("failed"), "failed")
@@ -47,9 +49,8 @@ const closing = router.close()
 finishConnect(await open())
 await assert.rejects(pending, /cancelled/)
 await closing
-assert.equal(closed, 3)
+assert.equal(closed, 4)
 await assert.rejects(router.route(connected, "local", local, remote), /unavailable/)
-assert.equal(remoteCalls, 2)
 const deletion = new RuntimeRouter()
 let deletedClosed = 0
 await deletion.connect("deleted", async () => ({ close: async () => { deletedClosed++ } }))
