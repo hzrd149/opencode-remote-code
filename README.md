@@ -133,6 +133,7 @@ the remote context explicitly distinguishes them. No model prompt templates are 
 - [Usage and troubleshooting](docs/usage.md): launchers, installation, tool behavior,
   and limitations.
 - [Test harness](test/README.md): test commands, coverage, and platform requirements.
+- [Changelog](CHANGELOG.md): changes since the fork and release notes for npm.
 
 ## Development
 
