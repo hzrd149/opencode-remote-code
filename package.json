@@ -40,7 +40,8 @@
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc",
     "prepack": "pnpm run build",
-    "dev": "tsc --watch",
+    "dev": "pnpm run build && node scripts/dev.mjs",
+    "dev:watch": "tsc --watch",
     "lint": "tsc --noEmit && tsc -p tsconfig.tools.json",
     "test": "pnpm run build && tsx test/run-tests.ts"
   },
