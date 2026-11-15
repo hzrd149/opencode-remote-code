@@ -1,5 +1,5 @@
 /**
- * mock-ssh-server.mjs — a real (in-process) SSH server for end-to-end testing.
+ * mock-ssh-server.ts — a real (in-process) SSH server for end-to-end testing.
  *
  * Why: the plugin talks to a remote machine over `ssh2` (exec + SFTP). To test it
  * without a physical remote host we spin up a `ssh2.Server` that behaves enough
@@ -24,7 +24,7 @@
  *             `realpath('.')` returns `/C:/Users/test/proj`.
  *
  * The "posix" path is byte-for-byte the old behaviour: the existing suites
- * (verify-mock-server.mjs, plugin-smoke.mjs) must keep passing untouched.
+ * (verify-mock-server.ts, plugin-smoke.ts) must keep passing untouched.
  *
  * Not touched: nothing here is imported by src/. This file is a test fixture.
  */
@@ -35,6 +35,27 @@ import path from "node:path"
 import { spawn } from "node:child_process"
 import { fileURLToPath } from "node:url"
 import ssh2 from "ssh2"
+import type { Connection } from "ssh2"
+import type { ChildProcess } from "node:child_process"
+import type { AddressInfo } from "node:net"
+
+export interface MockServerOptions {
+  rootDir?: string
+  user?: string
+  password?: string
+  host?: string
+  bashPath?: string
+  dialect?: string
+  pwsh?: boolean
+  pwshPath?: string
+  powershellPath?: string
+  stagingDir?: string
+  driveDir?: string
+  virtualExecPaths?: boolean
+  verbose?: boolean
+}
+
+export type MockServer = Awaited<ReturnType<typeof startMockServer>>
 
 const { Server, utils } = ssh2
 const { OPEN_MODE, STATUS_CODE } = utils.sftp
@@ -113,7 +134,7 @@ function loadHostKey() {
  * @param {string} rootDir  real directory backing the virtual project root
  * @param {{dialect?: "posix"|"windows", driveDir?: string}} [options]
  */
-function createPathMap(rootDir, options = {}) {
+function createPathMap(rootDir: string, options: Pick<MockServerOptions, "dialect" | "driveDir"> = {}) {
   const dialect = options.dialect || DEFAULT_DIALECT
   if (dialect === "windows") return createWindowsPathMap(rootDir, options.driveDir)
   if (dialect !== "posix") throw new Error(`unknown path-map dialect: ${dialect}`)
@@ -189,7 +210,7 @@ function createPosixPathMap(rootDir) {
     return { virtualPath: "/", localPath: absRoot }
   }
 
-  return { dialect: "posix", rootDir: absRoot, projectSftp: "/", resolveVirtual, clampVirtual, blocked }
+  return { dialect: "posix", rootDir: absRoot, driveDir: undefined as string | undefined, projectSftp: "/", resolveVirtual, clampVirtual, blocked }
 }
 
 /**
@@ -408,7 +429,7 @@ function attachSftp(sftp, { pathMap, log }) {
   const handles = new Map()
   let nextId = 1
 
-  const status = (reqid, code, message) => {
+  const status = (reqid: number, code: number, message?: string) => {
     try {
       sftp.status(reqid, code, message ? String(message) : undefined)
     } catch {
@@ -424,7 +445,7 @@ function attachSftp(sftp, { pathMap, log }) {
     return buf
   }
 
-  function getHandle(buf, kind) {
+  function getHandle(buf: Buffer, kind?: string | string[]) {
     if (!Buffer.isBuffer(buf) || buf.length !== 4) return null
     const h = handles.get(buf.readUInt32BE(0))
     if (!h) return null
@@ -578,7 +599,7 @@ function attachSftp(sftp, { pathMap, log }) {
     })
   )
 
-  async function applyAttrs(localPath, attrs, fh) {
+  async function applyAttrs(localPath: string, attrs: ssh2.Attributes, fh?: fsp.FileHandle) {
     if (!attrs) return
     if (typeof attrs.size === "number") {
       if (fh) await fh.truncate(attrs.size)
@@ -811,7 +832,7 @@ function attachShell(stream) {
  * @param {boolean}[options.verbose]  log every request
  * @returns {Promise<{port:number,host:string,user:string,password:string,rootDir:string,dialect:string,stats:object,close:()=>Promise<void>}>}
  */
-export async function startMockServer(options = {}) {
+export async function startMockServer(options: MockServerOptions = {}) {
   const {
     rootDir = DEFAULT_ROOT_DIR,
     user = process.env.MOCK_SSH_USER || DEFAULT_USER,
@@ -849,7 +870,7 @@ export async function startMockServer(options = {}) {
     // directory must exist (and be writable) from the first SFTP request on.
     await fsp.mkdir(path.join(pathMap.rootDir, ...WINDOWS_STAGING_RELATIVE.split("/")), { recursive: true })
   }
-  const staged = new Set()
+  const staged = new Set<string>()
 
   const stats = {
     connections: 0,
@@ -857,19 +878,12 @@ export async function startMockServer(options = {}) {
     authFailures: 0,
     execs: 0,
     sftpSessions: 0,
+    get pathViolations() { return pathMap.blocked.length },
+    get blockedPaths() { return pathMap.blocked.slice() },
   }
-  // Live views of the path mapper's escape-blocked list.
-  Object.defineProperty(stats, "pathViolations", {
-    enumerable: true,
-    get: () => pathMap.blocked.length,
-  })
-  Object.defineProperty(stats, "blockedPaths", {
-    enumerable: true,
-    get: () => pathMap.blocked.slice(),
-  })
 
-  const clients = new Set()
-  const children = new Set()
+  const clients = new Set<Connection>()
+  const children = new Set<ChildProcess>()
 
   const server = new Server(
     { hostKeys: [hostKey], ident: "OpenSSH_9.6-mock" },
@@ -945,7 +959,7 @@ export async function startMockServer(options = {}) {
     }
   )
 
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     server.once("error", reject)
     server.listen(0, host, () => {
       server.removeListener("error", reject)
@@ -953,7 +967,7 @@ export async function startMockServer(options = {}) {
     })
   })
 
-  const address = server.address()
+  const address = server.address() as AddressInfo
   const port = address.port
   log(`listening on ${host}:${port} root=${rootDir}`)
 
@@ -981,7 +995,7 @@ export async function startMockServer(options = {}) {
       await fsp.rm(file, { force: true }).catch(() => {})
     }
     staged.clear()
-    await new Promise((resolve) => server.close(() => resolve()))
+    await new Promise<void>((resolve) => server.close(() => resolve()))
   }
 
   /** Live view of blocked escape attempts (used by the verifier). */

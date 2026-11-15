@@ -1,5 +1,5 @@
 /**
- * test/remote-walk.mjs — `walk()`, `searchFiles()` and the SFTP error mapping of
+ * test/remote-walk.ts — `walk()`, `searchFiles()` and the SFTP error mapping of
  * `createRemoteFs()`, all against in-memory fakes (no SSH, no network).
  *
  * Coverage:
@@ -11,7 +11,7 @@
  *   fs      code 2 (NO_SUCH_FILE) -> null / no-op, code 3 (PERMISSION_DENIED) ->
  *           Error naming the path, canonical <-> SFTP path conversion, mtime in ms
  *
- *   npm run build && node test/remote-walk.mjs      # exit 0 = all PASS
+ *   npm run build && npx tsx test/remote-walk.ts      # exit 0 = all PASS
  */
 
 import assert from "node:assert/strict"
@@ -20,6 +20,9 @@ import { posixPathOps, windowsPathOps } from "../dist/platform/path.js"
 import { createRemoteFs } from "../dist/remote/fs.js"
 import { compileSearchPattern, searchFiles } from "../dist/remote/search.js"
 import { walk } from "../dist/remote/walk.js"
+import type { RemoteFs } from "../dist/remote/fs.js"
+import type { SSHPool } from "../dist/ssh-pool.js"
+import type { SFTPWrapper } from "ssh2"
 
 const ops = posixPathOps
 const DEFAULT_MTIME = 1_700_000_000_000
@@ -27,7 +30,7 @@ const DEFAULT_MTIME = 1_700_000_000_000
 let pass = 0
 const failures = []
 
-async function check(name, fn) {
+async function check(name: string, fn: () => void | Promise<void>) {
   try {
     await fn()
     pass++
@@ -50,7 +53,21 @@ const rels = (result) => result.files.map((f) => f.rel)
  * `readdir` reports lstat-like attributes (a symlink is `symlink: true`), and
  * paths that were never created simply do not exist.
  */
-class FakeFs {
+interface FakeNode {
+  dir: boolean
+  symlink: boolean
+  content: Buffer
+  mtime: number
+}
+
+class FakeFs implements RemoteFs {
+  nodes: Map<string, FakeNode>
+  denied: Set<string>
+  readdirDelayMs: number
+  readDelayMs: number
+  readdirPaths: string[]
+  readsInFlight: number
+  maxConcurrentReads: number
   constructor() {
     this.nodes = new Map()
     this.denied = new Set()
@@ -61,7 +78,7 @@ class FakeFs {
     this.maxConcurrentReads = 0
   }
 
-  put(p, spec = {}) {
+  put(p: string, spec: Partial<Omit<FakeNode, "content">> & { content?: string | Buffer } = {}) {
     const path = ops.normalize(p)
     const parent = ops.dirname(path)
     if (parent !== path && !this.nodes.has(parent)) this.put(parent, { dir: true })
@@ -74,11 +91,11 @@ class FakeFs {
     return this
   }
 
-  dir(p, mtime) {
+  dir(p: string, mtime?: number) {
     return this.put(p, { dir: true, mtime })
   }
 
-  file(p, content, mtime) {
+  file(p: string, content: string | Buffer, mtime?: number) {
     return this.put(p, { content, mtime })
   }
 
@@ -672,9 +689,11 @@ function makeStub({
     },
   }
 
-  const pool = {
+  const pool: SSHPool = {
+    async exec() { throw new Error("unexpected exec in SFTP-only test") },
+    async close() {},
     async withSftp(fn) {
-      return fn(sftp)
+      return fn(sftp as unknown as SFTPWrapper)
     },
   }
   return { pool, record, wasClosed: () => closed }
@@ -699,6 +718,7 @@ await check("createRemoteFs: SFTP code 3 names the path in the error", async () 
   await assert.rejects(
     () => fsApi.readdir("/home/x/locked"),
     (err) => {
+      assert.ok(err instanceof Error)
       assert.match(err.message, /permission denied/)
       assert.match(err.message, /\/home\/x\/locked/)
       return true
@@ -770,7 +790,9 @@ await check("createRemoteFs: mkdirp creates every level in order, windows form f
 
 await check("createRemoteFs: mkdirp is one round trip when the directory exists", async () => {
   const calls = []
-  const stubPool = {
+  const stubPool: SSHPool = {
+    async exec() { throw new Error("unexpected exec in SFTP-only test") },
+    async close() {},
     async withSftp(fn) {
       return fn({
         stat: (p, cb) => {
@@ -783,7 +805,7 @@ await check("createRemoteFs: mkdirp is one round trip when the directory exists"
             mtime: 0,
           })
         },
-      })
+      } as unknown as SFTPWrapper)
     },
   }
   const fsApi = createRemoteFs(stubPool, ops)

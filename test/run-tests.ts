@@ -1,26 +1,26 @@
 /**
- * run-tests.mjs — single entry point for the local end-to-end harness.
+ * run-tests.ts — single entry point for the local end-to-end harness.
  *
  *   1. runs the standalone unit suites as child processes (fast ones first):
- *        test/remote-path.mjs, test/dialect.mjs, test/glob-matcher.mjs,
- *        test/remote-walk.mjs, test/path-mapper.mjs, test/plugin-entry.mjs
- *      and the slow one, test/ssh-pool-lifecycle.mjs (skipped with --skip-slow)
+ *        test/remote-path.ts, test/dialect.ts, test/glob-matcher.ts,
+ *        test/remote-walk.ts, test/path-mapper.ts, test/plugin-entry.ts
+ *      and the slow one, test/ssh-pool-lifecycle.ts (skipped with --skip-slow)
  *   2. for every requested remote dialect (posix and/or windows):
  *        a. wipes and recreates test/tmp/{remote,local,mirror}
- *        b. starts the mock SSH server (test/mock-ssh-server.mjs) in that dialect
+ *        b. starts the mock SSH server (test/mock-ssh-server.ts) in that dialect
  *           (`dialect: "windows"` also enables `virtualExecPaths`, because the
  *           real PowerShell the mock runs cannot be chrooted)
- *        c. runs the mock-server verification (test/verify-mock-server.mjs);
+ *        c. runs the mock-server verification (test/verify-mock-server.ts);
  *           its three POSIX-shaped checks are reported as SKIP in the windows
  *           dialect (see POSIX_ONLY_VERIFICATION below)
  *        d. runs the plugin smoke test for that dialect:
- *             posix   -> test/plugin-smoke.mjs
- *             windows -> test/plugin-smoke-windows.mjs
+ *             posix   -> test/plugin-smoke.ts
+ *             windows -> test/plugin-smoke-windows.ts
  *   3. prints a summary tagged with the dialect; exit code 1 if anything failed
  *
- * Requires `npm run build` first (the suites import from dist/).
+ * Requires `pnpm run build` first (the suites import from dist/).
  *
- * Usage: node test/run-tests.mjs [--dialect=posix|windows|both] [--verbose]
+ * Usage: pnpm exec tsx test/run-tests.ts [--dialect=posix|windows|both] [--verbose]
  *                                [--skip-plugin] [--skip-slow]
  *
  *   --dialect=X    which remote dialect(s) to exercise (default: both)
@@ -29,30 +29,34 @@
  */
 
 import { spawn } from "node:child_process"
+import { createRequire } from "node:module"
 import fsp from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
-import { startMockServer, DIALECTS } from "./mock-ssh-server.mjs"
-import { runVerification } from "./verify-mock-server.mjs"
-import { runPluginSmoke } from "./plugin-smoke.mjs"
-import { runPluginSmokeWindows } from "./plugin-smoke-windows.mjs"
+import { startMockServer, DIALECTS } from "./mock-ssh-server.ts"
+import { runVerification } from "./verify-mock-server.ts"
+import { runPluginSmoke } from "./plugin-smoke.ts"
+import { runPluginSmokeWindows } from "./plugin-smoke-windows.ts"
+import type { MockServer } from "./mock-ssh-server.ts"
+import type { Check } from "./types.ts"
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
+const TSX_CLI = createRequire(import.meta.url).resolve("tsx/cli")
 const TMP = path.join(HERE, "tmp")
 const REMOTE = path.join(TMP, "remote")
 const LOCAL = path.join(TMP, "local")
 const MIRROR = path.join(TMP, "mirror")
 
 const USAGE =
-  "usage: node test/run-tests.mjs [--dialect=posix|windows|both] [--verbose] [--skip-plugin] [--skip-slow]"
+  "usage: pnpm exec tsx test/run-tests.ts [--dialect=posix|windows|both] [--verbose] [--skip-plugin] [--skip-slow]"
 
 /* -------------------------------------------------------------------------- */
 /* arguments                                                                  */
 /* -------------------------------------------------------------------------- */
 
-function parseArgs(argv) {
-  const parsed = { dialect: "both", verbose: false, skipPlugin: false, skipSlow: false, help: false }
+function parseArgs(argv: string[]) {
+  const parsed = { dialect: "both", dialects: [] as string[], verbose: false, skipPlugin: false, skipSlow: false, help: false }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
     if (arg === "--dialect") {
@@ -81,7 +85,7 @@ function parseArgs(argv) {
   return parsed
 }
 
-function usageError(message) {
+function usageError(message: string): never {
   console.error(`error: ${message}`)
   console.error(USAGE)
   process.exit(1)
@@ -111,25 +115,25 @@ if (options.help) {
  * assertions and finish in well under a second each.
  */
 const UNIT_SUITES = [
-  { script: "remote-path.mjs", label: "remote path suite", slow: false },
-  { script: "dialect.mjs", label: "dialect suite", slow: false },
-  { script: "glob-matcher.mjs", label: "glob matcher suite", slow: false },
-  { script: "remote-walk.mjs", label: "remote walk suite", slow: false },
-  { script: "config-activate.mjs", label: "config / activateIn suite", slow: false },
-  { script: "path-mapper.mjs", label: "path-mapper suite", slow: false },
-  { script: "plugin-entry.mjs", label: "plugin entry suite", slow: false },
-  { script: "ssh-pool-lifecycle.mjs", label: "ssh-pool lifecycle suite", slow: true },
+  { script: "remote-path.ts", label: "remote path suite", slow: false },
+  { script: "dialect.ts", label: "dialect suite", slow: false },
+  { script: "glob-matcher.ts", label: "glob matcher suite", slow: false },
+  { script: "remote-walk.ts", label: "remote walk suite", slow: false },
+  { script: "config-activate.ts", label: "config / activateIn suite", slow: false },
+  { script: "path-mapper.ts", label: "path-mapper suite", slow: false },
+  { script: "plugin-entry.ts", label: "plugin entry suite", slow: false },
+  { script: "ssh-pool-lifecycle.ts", label: "ssh-pool lifecycle suite", slow: true },
 ]
 
 /**
- * `verify-mock-server.mjs` is a *transport* conformance suite and three of its
+ * `verify-mock-server.ts` is a *transport* conformance suite and three of its
  * checks are written for a POSIX remote: they send POSIX shell one-liners
  * (`echo boom >&2; exit 7`) or assert that the SFTP root canonicalises to "/".
  * Under the windows dialect those are dialect differences, not defects, so they
  * are reported as SKIP instead of FAIL. Everything else (auth, SFTP round trips,
  * traversal guard, exit-code plumbing) runs unchanged in both dialects.
  *
- * Kept as data (not a filter on the windows side of verify-mock-server.mjs)
+ * Kept as data (not a filter on the windows side of verify-mock-server.ts)
  * because that file belongs to the mock suite and must stay dialect-agnostic.
  */
 const POSIX_ONLY_VERIFICATION = [
@@ -150,7 +154,7 @@ const POSIX_ONLY_VERIFICATION = [
   },
 ]
 
-function banner(text) {
+function banner(text: string) {
   console.log("")
   console.log(`--- ${text} ${"-".repeat(Math.max(0, 60 - text.length))}`)
 }
@@ -187,7 +191,7 @@ async function prepareTmp() {
   await fsp.mkdir(MIRROR, { recursive: true })
 }
 
-function tally(checks) {
+function tally(checks: Check[]) {
   return {
     pass: checks.filter((c) => c.status === "pass").length,
     fail: checks.filter((c) => c.status === "fail").length,
@@ -202,12 +206,12 @@ const TOTAL_LINE = /^(?:total:\s*)?PASS=\d+/
  * Run one standalone suite and fold it into a single check.
  *
  * Only the child's exit code and its trailing `total:` / `PASS=` / `FAIL` lines
- * are used, so the suites stay runnable on their own (`node test/<suite>.mjs`).
+ * are used, so the suites stay runnable on their own (`pnpm exec tsx test/<suite>.ts`).
  */
-function runSuite({ script, label }) {
+function runSuite({ script, label }: { script: string; label: string }) {
   const file = path.join(HERE, script)
-  return new Promise((resolve) => {
-    const child = spawn(process.execPath, [file], {
+  return new Promise<{ name: string; status: "pass" | "fail"; detail: string }>((resolve) => {
+    const child = spawn(process.execPath, [TSX_CLI, file], {
       cwd: path.resolve(HERE, ".."),
       stdio: ["ignore", "pipe", "pipe"],
     })
@@ -247,17 +251,17 @@ function runSuite({ script, label }) {
 /* -------------------------------------------------------------------------- */
 
 /** Tag every check with the dialect it belonged to (survives into the summary). */
-const tagDialect = (checks, dialect) => checks.map((c) => ({ ...c, dialect }))
+const tagDialect = (checks: Check[], dialect: string): Check[] => checks.map((c) => ({ ...c, dialect }))
 
 /**
  * Downgrade the POSIX-shaped verification checks to SKIP under the windows
  * dialect. Warns if a rule no longer matches anything, so a rename in
- * verify-mock-server.mjs cannot silently resurrect three red checks.
+ * verify-mock-server.ts cannot silently resurrect three red checks.
  */
-function applyDialectFilter(results, dialect) {
+function applyDialectFilter(results: Check[], dialect: string): Check[] {
   if (dialect !== "windows") return tagDialect(results, dialect)
   const matched = new Set()
-  const converted = results.map((result) => {
+  const converted: Check[] = results.map((result) => {
     const rule = POSIX_ONLY_VERIFICATION.find((candidate) => candidate.name.test(result.name))
     if (!rule) return { ...result, dialect }
     matched.add(rule)
@@ -271,14 +275,14 @@ function applyDialectFilter(results, dialect) {
   for (const rule of POSIX_ONLY_VERIFICATION) {
     if (!matched.has(rule)) {
       console.log(`WARN windows dialect: expected posix-only check "${rule.label}" is gone`)
-      console.log("     (test/verify-mock-server.mjs renamed it? update POSIX_ONLY_VERIFICATION)")
+      console.log("     (test/verify-mock-server.ts renamed it? update POSIX_ONLY_VERIFICATION)")
     }
   }
   return converted
 }
 
 /** Plugin smoke test for one dialect: posix and windows use different suites. */
-async function runSmoke(dialect, server) {
+async function runSmoke(dialect: string, server: MockServer) {
   const common = {
     port: server.port,
     user: server.user,
@@ -292,9 +296,9 @@ async function runSmoke(dialect, server) {
   return runPluginSmoke({ port: server.port, user: server.user, password: server.password, prefix: "[posix] " })
 }
 
-async function runDialect(dialect) {
+async function runDialect(dialect: string) {
   const startedAt = Date.now()
-  const checks = []
+  const checks: Check[] = []
   await prepareTmp()
 
   banner(`${dialect} dialect`)
@@ -302,7 +306,7 @@ async function runDialect(dialect) {
   console.log(`mirror root = ${MIRROR}`)
   console.log(`tmp wiped fresh for this dialect`)
 
-  let server = null
+  let server: MockServer | null = null
   try {
     server = await startMockServer({
       rootDir: REMOTE,
@@ -321,7 +325,7 @@ async function runDialect(dialect) {
 
     banner(`${dialect} dialect: mock server verification`)
     if (dialect === "windows") {
-      // verify-mock-server.mjs prints its own PASS/FAIL lines, so warn *before*
+      // verify-mock-server.ts prints its own PASS/FAIL lines, so warn *before*
       // the three POSIX-shaped checks show up as red on screen; they are folded
       // into SKIP in the summary below.
       console.log("NOTE 3 checks in this transport suite are POSIX-shaped; they print FAIL here")
@@ -374,10 +378,10 @@ async function runDialect(dialect) {
 async function main() {
   const startedAt = Date.now()
 
-  console.log(`test/run-tests.mjs  dialects=${dialectLabel}  node ${process.version}`)
+  console.log(`test/run-tests.ts  dialects=${dialectLabel}  node ${process.version}`)
   console.log(`(banners below are prefixed with the dialect they belong to)`)
 
-  const checks = []
+  const checks: Check[] = []
   let fatalError = null
 
   // test/tmp is prepared again per dialect; this first pass keeps the unit

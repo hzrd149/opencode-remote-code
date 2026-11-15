@@ -1,11 +1,11 @@
 /**
- * test/remote-path.mjs — RemotePathOps conformance for BOTH platforms.
+ * test/remote-path.ts — RemotePathOps conformance for BOTH platforms.
  *
  * Covers POSIX and Windows path semantics:
  * canonical form, drive case, `..` escape from the drive root, case-insensitive
  * comparison/containment, root boundaries and the SFTP wire form.
  *
- *   npm run build && node test/remote-path.mjs      # exit 0 = all PASS
+ *   npm run build && npx tsx test/remote-path.ts      # exit 0 = all PASS
  */
 
 import assert from "node:assert/strict"
@@ -15,7 +15,7 @@ import { createPathOps, posixPathOps, windowsPathOps } from "../dist/platform/pa
 let pass = 0
 const failures = []
 
-function check(name, fn) {
+function check(name: string, fn: () => void) {
   try {
     fn()
     pass++

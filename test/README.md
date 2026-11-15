@@ -5,9 +5,9 @@ SFTP operations. No external SSH target is needed. Build first: suites import
 the compiled plugin from `dist/`.
 
 ```sh
-npm run build
-MOCK_SSH_BASH=/bin/bash npm test -- --dialect=posix  # Linux/macOS
-npm test                     # both dialects; requires Windows + PowerShell
+pnpm run build
+MOCK_SSH_BASH=/bin/bash pnpm test --dialect=posix  # Linux/macOS
+pnpm test                    # both dialects; requires Windows + PowerShell
 ```
 
 ## Runner options
@@ -29,7 +29,18 @@ The mock defaults to Git for Windows Bash; set `MOCK_SSH_BASH` on other hosts.
 Some unit assertions also assume Windows host paths and currently fail on Linux
 (activation backslashes and simulated Windows long mirror paths).
 
-Suites can also run individually, for example `node test/dialect.mjs`.
+Suites can also run individually, for example `pnpm exec tsx test/dialect.ts`.
+
+The TypeScript harness and postbuild script run through the development-only
+`tsx` runner on Node 20 and newer; native Node TypeScript support is not required.
+`pnpm run lint` checks both `src/` and the harness (`tsconfig.tools.json`). The
+harness uses relaxed compiler settings for its dynamic protocol/plugin fakes,
+with typed public options, transport results and filesystem fixtures; production
+source keeps its strict settings. Build first because the tests exercise `dist/`.
+
+The root `index.js` remains JavaScript for OpenCode's directory discovery.
+Published runtime code remains compiled JavaScript in `dist/`; neither tests nor
+the TypeScript runner are shipped as runtime dependencies.
 
 ## Coverage
 

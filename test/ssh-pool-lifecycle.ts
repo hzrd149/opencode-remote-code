@@ -1,5 +1,5 @@
 /**
- * ssh-pool-lifecycle.mjs — lifecycle / resource-leak tests for the SSH pool.
+ * ssh-pool-lifecycle.ts — lifecycle / resource-leak tests for the SSH pool.
  *
  * Regression coverage for:
  *   1. a failed `createSSHPool()` must not leave a 30s health-check interval
@@ -10,7 +10,7 @@
  *
  * Plain Node ESM, no test framework. Imports the compiled output.
  *
- * Usage: node test/ssh-pool-lifecycle.mjs
+ * Usage: npx tsx test/ssh-pool-lifecycle.ts
  */
 
 import assert from "node:assert"
@@ -19,7 +19,7 @@ import fsp from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 
-import { startMockServer } from "./mock-ssh-server.mjs"
+import { startMockServer } from "./mock-ssh-server.ts"
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(HERE, "..")
@@ -39,7 +39,7 @@ function fail(name, err) {
   console.log(`FAIL ${name}: ${(err && err.message) || err}`)
 }
 
-async function check(name, fn) {
+async function check(name: string, fn: () => string | Promise<string>) {
   try {
     const detail = await fn()
     pass(name, detail)
@@ -131,11 +131,11 @@ function captureLogs() {
 async function closedPort() {
   const net = await import("node:net")
   const server = net.createServer()
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     server.once("error", reject)
     server.listen(0, "127.0.0.1", resolve)
   })
-  const { port } = server.address()
+  const { port } = server.address() as import("node:net").AddressInfo
   await new Promise((resolve) => server.close(resolve))
   return port
 }

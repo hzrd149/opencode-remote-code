@@ -1,10 +1,10 @@
 /**
- * verify-mock-server.mjs — proves the mock SSH server is good enough for the
+ * verify-mock-server.ts — proves the mock SSH server is good enough for the
  * plugin: password auth, exec (stdout + exit codes), SFTP round trips, and
  * path-escape protection.
  *
- * Standalone:   node test/verify-mock-server.mjs
- * From runner:  import { runVerification } from "./verify-mock-server.mjs"
+ * Standalone:   npx tsx test/verify-mock-server.ts
+ * From runner:  import { runVerification } from "./verify-mock-server.ts"
  *
  * Exits 0 when everything passes, 1 otherwise.
  */
@@ -14,8 +14,11 @@ import fsp from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import ssh2 from "ssh2"
+import type { SFTPWrapper } from "ssh2"
+import type { ConnectionOptions, ExecResult, SftpResults, Check } from "./types.ts"
+import type { MockServer } from "./mock-ssh-server.ts"
 
-import { startMockServer, DEFAULT_ROOT_DIR } from "./mock-ssh-server.mjs"
+import { startMockServer, DEFAULT_ROOT_DIR } from "./mock-ssh-server.ts"
 
 const { Client } = ssh2
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -25,8 +28,8 @@ const LOCAL_DIR = path.join(HERE, "tmp", "local")
 /* tiny promisified ssh2 helpers                                              */
 /* -------------------------------------------------------------------------- */
 
-function connect({ port, user, password, host = "127.0.0.1" }) {
-  return new Promise((resolve, reject) => {
+function connect({ port, user, password, host = "127.0.0.1" }: ConnectionOptions) {
+  return new Promise<ssh2.Client>((resolve, reject) => {
     const client = new Client()
     const timer = setTimeout(() => {
       client.end()
@@ -45,8 +48,8 @@ function connect({ port, user, password, host = "127.0.0.1" }) {
   })
 }
 
-function execOn(client, command) {
-  return new Promise((resolve, reject) => {
+function execOn(client: ssh2.Client, command: string) {
+  return new Promise<ExecResult>((resolve, reject) => {
     client.exec(command, (err, stream) => {
       if (err) return reject(err)
       let stdout = ""
@@ -64,20 +67,22 @@ function execOn(client, command) {
   })
 }
 
-const call = (obj, method, ...args) =>
-  new Promise((resolve, reject) => {
-    obj[method](...args, (err, value) => (err ? reject(err) : resolve(value)))
+const call = <K extends keyof SftpResults>(obj: SFTPWrapper, method: K, ...args: unknown[]) =>
+  new Promise<SftpResults[K]>((resolve, reject) => {
+    // ssh2 overloads have different arities; keep the dynamic dispatch at this boundary.
+    const invoke = obj[method] as (...args: unknown[]) => void
+    invoke.call(obj, ...args, (err: Error | undefined, value: SftpResults[K]) => (err ? reject(err) : resolve(value)))
   })
 
-const sftpOf = (client) => new Promise((resolve, reject) => client.sftp((err, s) => (err ? reject(err) : resolve(s))))
+const sftpOf = (client: ssh2.Client) => new Promise<SFTPWrapper>((resolve, reject) => client.sftp((err, s) => (err ? reject(err) : resolve(s))))
 
 /* -------------------------------------------------------------------------- */
 /* runner                                                                     */
 /* -------------------------------------------------------------------------- */
 
 function createRunner(prefix = "") {
-  const results = []
-  async function check(name, fn) {
+  const results: Check[] = []
+  async function check(name: string, fn: () => void | Promise<void>) {
     try {
       await fn()
       results.push({ name, status: "pass" })
@@ -105,7 +110,7 @@ function createRunner(prefix = "") {
  * @param {string} [opts.prefix] printed before every test name
  * @returns {Promise<{results:Array<{name:string,status:string,detail?:string}>}>}
  */
-export async function runVerification(opts) {
+export async function runVerification(opts: { port: number; user?: string; password?: string; rootDir?: string; server?: MockServer; prefix?: string }) {
   const {
     port,
     user = "testuser",
@@ -394,7 +399,7 @@ export async function runVerification(opts) {
   })
 
   await check("traversal: stat/opendir outside the root is refused", async () => {
-    for (const method of ["stat", "lstat", "readdir"]) {
+    for (const method of ["stat", "lstat", "readdir"] as const) {
       let error = null
       try {
         await call(sftp, method, "/../../..")

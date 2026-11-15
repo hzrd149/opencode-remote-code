@@ -1,5 +1,5 @@
 /**
- * test/glob-matcher.mjs — pure tests for the SFTP-era glob matcher.
+ * test/glob-matcher.ts — pure tests for the SFTP-era glob matcher.
  *
  * Covers the semantics `glob` / `grep --include` depend on:
  * `*` / `?` never cross `/`, `**` (and `**\/` = zero or more dirs) does,
@@ -9,7 +9,7 @@
  *
  * Uses `posixPathOps` only to prove the matcher never needs a real filesystem.
  *
- *   npm run build && node test/glob-matcher.mjs      # exit 0 = all PASS
+ *   npm run build && npx tsx test/glob-matcher.ts      # exit 0 = all PASS
  */
 
 import assert from "node:assert/strict"
@@ -19,7 +19,7 @@ import { expandBraces, globToRegExp, matchGlob } from "../dist/remote/glob.js"
 let pass = 0
 const failures = []
 
-function check(name, fn) {
+function check(name: string, fn: () => void) {
   try {
     fn()
     pass++
@@ -31,11 +31,11 @@ function check(name, fn) {
   }
 }
 
-function yes(pattern, path, opts) {
+function yes(pattern: string, path: string, opts?: Parameters<typeof matchGlob>[2]) {
   assert.equal(matchGlob(pattern, path, opts), true, `expected ${JSON.stringify(pattern)} to match ${JSON.stringify(path)}`)
 }
 
-function no(pattern, path, opts) {
+function no(pattern: string, path: string, opts?: Parameters<typeof matchGlob>[2]) {
   assert.equal(matchGlob(pattern, path, opts), false, `expected ${JSON.stringify(pattern)} NOT to match ${JSON.stringify(path)}`)
 }
 

@@ -68,12 +68,15 @@ PowerShell (5.1 ships with Windows 10+), and nothing else.
 Once published, use `"package": "@hzrd149/opencode-remote-code"` in the configuration
 below. To use a local checkout instead, build it and use its absolute path:
 
+Development uses pnpm 10 (pinned in `package.json`). Install it with
+`npm install --global pnpm@10.34.9` if needed. Tests run on Node 20+ via `tsx`.
+
 ```bash
 # 1. Get the source and build it (the plugin has runtime deps, so a build is required)
 git clone https://github.com/hzrd149/opencode-remote-code.git
 cd opencode-remote-code
-npm install
-npm run build            # tsc + scripts/postbuild.cjs (copies src/prompts → dist/prompts)
+pnpm install --frozen-lockfile
+pnpm run build           # tsc + scripts/postbuild.ts (copies src/prompts → dist/prompts)
 ```
 
 ```jsonc
@@ -537,8 +540,8 @@ that slugs to nothing) becomes `root`; a *missing* workdir becomes the placehold
 ## 🧪 Testing
 
 ```bash
-npm run build
-node test/run-tests.mjs          # same as: npm test
+pnpm run build
+pnpm test                      # tsx test/run-tests.ts
 ```
 
 One command runs everything offline: the unit suites as child processes, then — for each requested
@@ -549,14 +552,14 @@ mock-server conformance checks and the plugin smoke test. It prints
 | Flag | Effect |
 | :--- | :--- |
 | `--dialect=posix\|windows\|both` | which remote dialect(s) to exercise (default `both`) |
-| `--skip-slow` | skip `test/ssh-pool-lifecycle.mjs` (~25 s of connection timers) |
+| `--skip-slow` | skip `test/ssh-pool-lifecycle.ts` (~25 s of connection timers) |
 | `--skip-plugin` | do not load `dist/index.js` (unit + mock-server checks only) |
 | `--verbose` | print every SSH/SFTP request and full child-suite output |
 
 Because the dev machine is Windows with a real PowerShell 5.1, the `windows` dialect runs the
 plugin's generated `-EncodedCommand` through the real `powershell.exe` while SFTP speaks `/C:/…`
 paths over a real directory — the dialect, path mapping, decoding and exit codes are all covered
-locally. Every suite can also be run alone (`node test/<suite>.mjs`); see
+locally. Every suite can also be run alone (`pnpm exec tsx test/<suite>.ts`); see
 [`test/README.md`](test/README.md) for the mock's path map and its documented limitations.
 
 ---

@@ -1,7 +1,7 @@
 /**
  * Suite: `activateIn` scoping + the 3.0.1 default changes.
  *
- * `node test/config-activate.mjs` — exit 0 = all PASS.
+ * `npx tsx test/config-activate.ts` — exit 0 = all PASS.
  *
  * Why this exists: the seven tools are NAME OVERRIDES, so an active plugin means
  * the session has no local file access at all. `activateIn` is the escape hatch —
@@ -26,7 +26,7 @@ let pass = 0
 let fail = 0
 const failures = []
 
-async function check(name, fn) {
+async function check(name: string, fn: () => void | Promise<void>) {
   try {
     await fn()
     pass += 1

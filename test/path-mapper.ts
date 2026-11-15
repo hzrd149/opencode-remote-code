@@ -1,10 +1,10 @@
 /**
- * test/path-mapper.mjs — PathMapper / ManifestManager / SyncEngine (mirror v3).
+ * test/path-mapper.ts — PathMapper / ManifestManager / SyncEngine (mirror v3).
  *
  * Covers namespace layout, manifest v2, per-file sync, case-insensitive
  * collisions and local long paths.
  *
- *   npm run build && node test/path-mapper.mjs      # exit 0 = all PASS
+ *   npm run build && npx tsx test/path-mapper.ts      # exit 0 = all PASS
  *
  * Imports the BUILT code from ../dist/mirror/*.js and ../dist/platform/path.js —
  * never from src/.
@@ -35,7 +35,7 @@ let pass = 0
 let skipped = 0
 const failures = []
 
-async function check(name, fn) {
+async function check(name: string, fn: () => void | Promise<void>) {
   try {
     await fn()
     pass++
@@ -48,7 +48,7 @@ async function check(name, fn) {
   }
 }
 
-function skip(name, why) {
+function skip(name: string, why: string) {
   skipped++
   console.log(`SKIP ${name} (${why})`)
 }
@@ -80,14 +80,14 @@ function mapper(kind, remoteRoot, extra = {}) {
 }
 
 /** Local path expected for a remote path whose mirror segments are `segments`. */
-function expectLocal(m, remote, segments) {
+function expectLocal(m: PathMapper, remote: string, segments: string[]) {
   assert.equal(m.toLocal(remote), path.join(m.mirrorNamespace, ...segments))
 }
 
 // ===========================================================================
 // 1. mapping tables — posix
 // ===========================================================================
-const POSIX_TABLE = [
+const POSIX_TABLE: [string, string[]][] = [
   // [remote, expected segments under the namespace]
   ["/", ["root"]],
   ["/home", ["root", "home"]],
@@ -138,7 +138,7 @@ await check("posix: mirrorBase is the workspace dir, not the namespace root", ()
 // ===========================================================================
 // 2. mapping tables — windows
 // ===========================================================================
-const WINDOWS_TABLE = [
+const WINDOWS_TABLE: [string, string[]][] = [
   ["C:/", ["C"]],
   ["C:/Users", ["C", "Users"]],
   ["C:/Users/zxk", ["C", "Users", "zxk"]],
@@ -307,7 +307,7 @@ await check("guard: a local resolution that escapes the namespace throws (toLoca
   // must be a real check, not a by-product of normalisation.
   const evilOps = {
     ...posix,
-    kind: "posix",
+    kind: "posix" as const,
     normalize: (p) => p,
     isAbsolute: () => true,
     segments: () => (armed ? ["..", "..", "escaped"] : []),
@@ -552,7 +552,7 @@ await check("manifest: collision names survive a reload (re-seeded claims)", asy
 // ===========================================================================
 const SYNC_REMOTE = "/home/zxk/proj/src/a.ts"
 
-function createFakeFs(seed = {}) {
+function createFakeFs(seed: Record<string, { data: Buffer | string; mtime: number }> = {}) {
   const files = new Map()
   for (const [remote, value] of Object.entries(seed)) {
     files.set(remote, { data: Buffer.from(value.data), mtime: value.mtime })

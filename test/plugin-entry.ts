@@ -1,5 +1,5 @@
 /**
- * test/plugin-entry.mjs — regression tests for how OpenCode v2 loads this plugin.
+ * test/plugin-entry.ts — regression tests for how OpenCode v2 loads this plugin.
  *
  * V2 resolves a local plugin **directory** to `<dir>/index.js` or `<dir>/server.js`
  * and ignores `package.json` `main` / `exports` entirely. Before the root
@@ -7,7 +7,7 @@
  * skipped: no "loading plugin" log, no error, plugin simply never ran
  * (measured on opencode v2.1.0, Windows).
  *
- *   node test/plugin-entry.mjs        # exit 0 = all PASS
+ *   npx tsx test/plugin-entry.ts        # exit 0 = all PASS
  */
 
 import assert from "node:assert/strict"
@@ -21,7 +21,7 @@ const REPO_ROOT = path.resolve(HERE, "..")
 let pass = 0
 const failures = []
 
-async function check(name, fn) {
+async function check(name: string, fn: () => void | Promise<void>) {
   try {
     await fn()
     pass++
@@ -77,7 +77,7 @@ await check("root shim re-exports the named exports", () => {
 await check('package.json keeps "type": "module" so the shim is ESM', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf8"))
   assert.equal(pkg.type, "module")
-  assert.equal(pkg.name, "opencode-remote-code")
+  assert.equal(pkg.name, "@hzrd149/opencode-remote-code")
 })
 
 console.log("")

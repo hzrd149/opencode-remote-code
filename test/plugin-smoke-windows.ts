@@ -1,8 +1,8 @@
 /**
- * plugin-smoke-windows.mjs — the real end-to-end proof that the **plugin** works
+ * plugin-smoke-windows.ts — the real end-to-end proof that the **plugin** works
  * against a **Windows** remote.
  *
- * `test/spike-windows.mjs` proves the *transport* by hand-building the PowerShell
+ * `test/spike-windows.ts` proves the *transport* by hand-building the PowerShell
  * command; this file goes one level up and proves the shipped product:
  *
  *   dist/index.js  ->  fake V2 plugin context  ->  setup(ctx)
@@ -27,8 +27,8 @@
  *    works too.
  *
  * Usage:
- *   node test/plugin-smoke-windows.mjs        # starts its own mock server
- *   node test/run-tests.mjs --dialect=windows # via the harness (reuses its server)
+ *   npx tsx test/plugin-smoke-windows.ts        # starts its own mock server
+ *   npx tsx test/run-tests.ts --dialect=windows # via the harness (reuses its server)
  *
  * Import: `runPluginSmokeWindows({ port, user, password, rootDir, server })`.
  * Exit:   0 on PASS, 1 on FAIL (also 1 + "TIMEOUT" if the watchdog fires).
@@ -38,13 +38,15 @@ import assert from "node:assert/strict"
 import fsp from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import type { Check } from "./types.ts"
+import type { MockServer } from "./mock-ssh-server.ts"
 
 import {
   startMockServer,
   WINDOWS_PROJECT_PATH,
   WINDOWS_PROJECT_SFTP,
   WINDOWS_STAGING_RELATIVE,
-} from "./mock-ssh-server.mjs"
+} from "./mock-ssh-server.ts"
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(HERE, "..")
@@ -107,7 +109,7 @@ const messageOf = (err) => (err && err.message) || String(err)
 
 /**
  * Describe what a module default export is, without running it.
- * Same classification as `plugin-smoke.mjs` (kept local so both files stay
+ * Same classification as `plugin-smoke.ts` (kept local so both files stay
  * independently readable).
  */
 function classify(exported) {
@@ -245,7 +247,16 @@ async function loadPlugin(distPath) {
  * @param {string} [opts.prefix]          printed before every check name
  * @returns {Promise<{status:"pass"|"fail", checks:Array<{name:string,status:string,detail?:string}>}>}
  */
-export async function runPluginSmokeWindows(opts) {
+export async function runPluginSmokeWindows(opts: {
+  port: number
+  user?: string
+  password?: string
+  rootDir?: string
+  server?: MockServer
+  distPath?: string
+  mirrorRoot?: string
+  prefix?: string
+}) {
   const {
     port,
     user = "testuser",
@@ -257,7 +268,7 @@ export async function runPluginSmokeWindows(opts) {
     prefix = "[win] ",
   } = opts ?? {}
 
-  const checks = []
+  const checks: Check[] = []
   const say = (line) => console.log(`${prefix}${line}`)
 
   let counter = 0
@@ -265,7 +276,7 @@ export async function runPluginSmokeWindows(opts) {
    * One numbered assertion line. `fn` may contain several `assert.*` calls; the
    * first failure fails the whole numbered item and prints its message.
    */
-  async function check(text, fn) {
+  async function check(text: string, fn: () => void | Promise<void>) {
     counter++
     const name = `${counter}. ${text}`
     try {
@@ -470,7 +481,7 @@ export async function runPluginSmokeWindows(opts) {
     if (seen.size > 0) note(`observed the transient staged script(s): ${[...seen].join(", ")} (cleaned up)`)
     else
       note(
-        `the transient oc-*.ps1 was not caught by the 15ms poller; the -File path itself is pinned by test/spike-windows.mjs`
+        `the transient oc-*.ps1 was not caught by the 15ms poller; the -File path itself is pinned by test/spike-windows.ts`
       )
   })
 

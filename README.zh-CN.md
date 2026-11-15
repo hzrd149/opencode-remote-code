@@ -64,12 +64,15 @@ PowerShell（Windows 10+ 自带 5.1），别的一概不需要。
 发布后，可在下面的配置中使用 `"package": "@hzrd149/opencode-remote-code"`。
 使用本地源码时，先构建，再将 `package` 设为源码目录的绝对路径：
 
+开发使用 pnpm 10（版本固定在 `package.json` 中）。如未安装，可运行
+`npm install --global pnpm@10.34.9`。测试通过 `tsx` 在 Node 20+ 上运行。
+
 ```bash
 # 1. 取源码并构建（插件带运行时依赖，必须构建）
 git clone https://github.com/hzrd149/opencode-remote-code.git
 cd opencode-remote-code
-npm install
-npm run build            # tsc + scripts/postbuild.cjs（把 src/prompts 拷进 dist/prompts）
+pnpm install --frozen-lockfile
+pnpm run build           # tsc + scripts/postbuild.ts（把 src/prompts 拷进 dist/prompts）
 ```
 
 ```jsonc
@@ -501,8 +504,8 @@ workdir slug 既要能吃 Windows 路径也要能吃 POSIX 路径（这正是 3.
 ## 🧪 测试
 
 ```bash
-npm run build
-node test/run-tests.mjs          # 等价于 npm test
+pnpm run build
+pnpm test                      # tsx test/run-tests.ts
 ```
 
 一条命令离线跑完全部：先把单元套件作为子进程跑一遍，然后对每个方言起一个进程内 mock SSH 服务器
@@ -512,13 +515,13 @@ node test/run-tests.mjs          # 等价于 npm test
 | 参数 | 作用 |
 | :--- | :--- |
 | `--dialect=posix\|windows\|both` | 跑哪种远端方言（默认 `both`） |
-| `--skip-slow` | 跳过 `test/ssh-pool-lifecycle.mjs`（约 25 s 的连接计时器） |
+| `--skip-slow` | 跳过 `test/ssh-pool-lifecycle.ts`（约 25 s 的连接计时器） |
 | `--skip-plugin` | 不加载 `dist/index.js`（只跑单元 + mock 服务器检查） |
 | `--verbose` | 打印每条 SSH/SFTP 请求与子套件的完整输出 |
 
 开发机是 Windows 且装有真实的 PowerShell 5.1，所以 `windows` 方言会把插件生成的
 `-EncodedCommand` 交给真正的 `powershell.exe` 执行，而 SFTP 用 `/C:/…` 形态操作真实目录——方言、
-路径映射、解码、退出码都在本地被真实覆盖。每个套件也可单独运行（`node test/<suite>.mjs`）；
+路径映射、解码、退出码都在本地被真实覆盖。每个套件也可单独运行（`pnpm exec tsx test/<suite>.ts`）；
 mock 的路径映射与已知限制见 [`test/README.md`](test/README.md)。
 
 ---

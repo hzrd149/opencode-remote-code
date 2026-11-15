@@ -1,12 +1,12 @@
 /**
- * test/dialect.mjs — RemoteDialect conformance (no SSH needed).
+ * test/dialect.ts — RemoteDialect conformance (no SSH needed).
  *
  * Covers POSIX `cd <quoted> && script`, the validated
  * PS 5.1 template, `-EncodedCommand`, the `-File` staging fallback and its
  * cleanup, UTF-8 with GB18030 fallback and the CLIXML scrubbing that
  * PowerShell's error stream forces on us.
  *
- *   npm run build && node test/dialect.mjs      # exit 0 = all PASS
+ *   npm run build && npx tsx test/dialect.ts      # exit 0 = all PASS
  */
 
 import assert from "node:assert/strict"
@@ -16,7 +16,7 @@ import { createDialect, ENCODED_COMMAND_MAX_LENGTH } from "../dist/platform/dial
 let pass = 0
 const failures = []
 
-async function check(name, fn) {
+async function check(name: string, fn: () => void | Promise<void>) {
   try {
     await fn()
     pass++
@@ -47,7 +47,7 @@ function fakeDeps() {
 }
 
 /** Decode the base64 argument of `-EncodedCommand` back to the PS script text. */
-function decodeEncodedCommand(command) {
+function decodeEncodedCommand(command: string) {
   const m = command.match(/-EncodedCommand\s+(\S+)\s*$/)
   assert.ok(m, `command does not end with -EncodedCommand <base64>: ${command.slice(0, 120)}…`)
   return Buffer.from(m[1], "base64").toString("utf16le")

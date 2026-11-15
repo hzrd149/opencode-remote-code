@@ -3,6 +3,7 @@
   "version": "3.0.1",
   "description": "OpenCode plugin that lets AI agents edit and run commands on a remote machine over SSH — Windows (OpenSSH + PowerShell) or POSIX — with zero footprint on the remote side",
   "type": "module",
+  "packageManager": "pnpm@12.21.0",
   "engines": {
     "node": ">=20"
   },
@@ -29,12 +30,11 @@
     "pic.png"
   ],
   "scripts": {
-    "build": "tsc",
-    "postbuild": "node scripts/postbuild.cjs",
-    "prepack": "npm run build",
+    "build": "tsc && tsx scripts/postbuild.ts",
+    "prepack": "pnpm run build",
     "dev": "tsc --watch",
-    "lint": "tsc --noEmit",
-    "test": "node test/run-tests.mjs"
+    "lint": "tsc --noEmit && tsc -p tsconfig.tools.json",
+    "test": "tsx test/run-tests.ts"
   },
   "peerDependencies": {
     "@opencode/plugin": "^2.1.2"
@@ -47,6 +47,7 @@
     "@opencode/plugin": "^2.1.2",
     "@types/node": "^20.0.0",
     "@types/ssh2": "^1.15.5",
+    "tsx": "^4.20.0",
     "typescript": "^5.4.0"
   },
   "repository": {

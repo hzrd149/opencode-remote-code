@@ -1,5 +1,5 @@
 /**
- * plugin-smoke.mjs — loads `dist/index.js` with a fake OpenCode **V2** plugin
+ * plugin-smoke.ts — loads `dist/index.js` with a fake OpenCode **V2** plugin
  * context and asserts the plugin registers the seven remote tools.
  *
  * The plugin is migrated from V1 to V2 by another agent in parallel, so this
@@ -15,6 +15,7 @@
 import fsp from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import type { Check } from "./types.ts"
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(HERE, "..")
@@ -139,12 +140,12 @@ function makeMockContext({ port, user, password }) {
  * @param {string} [opts.prefix]
  * @returns {Promise<{status:"pass"|"fail"|"skip", checks:Array, reason?:string}>}
  */
-export async function runPluginSmoke(opts) {
+export async function runPluginSmoke(opts: { port: number; user?: string; password?: string; distPath?: string; prefix?: string }) {
   const { port, user = "testuser", password = "testpass", distPath = DEFAULT_DIST, prefix = "[plugin] " } = opts
 
-  const checks = []
+  const checks: Check[] = []
   const say = (line) => console.log(`${prefix}${line}`)
-  const record = (name, status, detail) => {
+  const record = (name: string, status: "pass" | "fail" | "skip", detail?: string) => {
     checks.push({ name, status, detail })
     if (status === "pass") say(`PASS ${name}`)
     else if (status === "fail") say(`FAIL ${name}\n${prefix}     ${detail}`)

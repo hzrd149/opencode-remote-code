@@ -1,8 +1,11 @@
 // Post-build step: copy the prompt template .txt files into dist/prompts.
 // (No source rewriting is needed anymore: the V2 plugin imports nothing from a
 //  local shim, every tool uses plain JSON Schema.)
-const fs = require('fs')
-const path = require('path')
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const distDir = path.join(__dirname, '..', 'dist')
 const promptsSrc = path.join(__dirname, '..', 'src', 'prompts')

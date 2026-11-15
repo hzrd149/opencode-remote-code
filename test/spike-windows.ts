@@ -1,5 +1,5 @@
 /**
- * spike-windows.mjs — end-to-end proof that the **Windows transport** works.
+ * spike-windows.ts — end-to-end proof that the **Windows transport** works.
  *
  * Run on Windows with a real PowerShell
  * 5.1, so the mock SSH server can emulate a Windows remote faithfully:
@@ -14,7 +14,7 @@
  * checks quoting, base64/UTF-16LE, exit codes, CLIXML, UTF-8 output, long-script
  * staging and the SFTP path space.
  *
- * Usage:   node test/spike-windows.mjs      (MOCK_SSH_VERBOSE=1 logs every request)
+ * Usage:   npx tsx test/spike-windows.ts      (MOCK_SSH_VERBOSE=1 logs every request)
  * Exit:    0 when every check passed, 1 otherwise.
  *
  * NOTE about exec vs. SFTP: PowerShell cannot be "chrooted", so exec scripts see
@@ -28,6 +28,8 @@ import assert from "node:assert/strict"
 import fsp from "node:fs/promises"
 import path from "node:path"
 import ssh2 from "ssh2"
+import type { SFTPWrapper } from "ssh2"
+import type { ConnectionOptions, ExecResult, SftpResults } from "./types.ts"
 
 import {
   startMockServer,
@@ -35,7 +37,7 @@ import {
   WINDOWS_PROJECT_SFTP,
   WINDOWS_STAGING_RELATIVE,
   WINDOWS_STAGING_SFTP,
-} from "./mock-ssh-server.mjs"
+} from "./mock-ssh-server.ts"
 
 const { Client } = ssh2
 
@@ -47,8 +49,8 @@ const B64_LIMIT = 6000
 /* ssh2 helpers                                                               */
 /* -------------------------------------------------------------------------- */
 
-function connect({ port, user, password, host = "127.0.0.1" }) {
-  return new Promise((resolve, reject) => {
+function connect({ port, user, password, host = "127.0.0.1" }: ConnectionOptions) {
+  return new Promise<ssh2.Client>((resolve, reject) => {
     const client = new Client()
     const timer = setTimeout(() => {
       client.end()
@@ -68,8 +70,8 @@ function connect({ port, user, password, host = "127.0.0.1" }) {
 }
 
 /** exec: returns raw buffers *and* decoded text (utf8 non-fatal). */
-function execOn(client, command) {
-  return new Promise((resolve, reject) => {
+function execOn(client: ssh2.Client, command: string) {
+  return new Promise<ExecResult & { stdoutBuf: Buffer; stderrBuf: Buffer }>((resolve, reject) => {
     client.exec(command, (err, stream) => {
       if (err) return reject(err)
       const out = []
@@ -93,13 +95,15 @@ function execOn(client, command) {
   })
 }
 
-const call = (obj, method, ...args) =>
-  new Promise((resolve, reject) => {
-    obj[method](...args, (err, value) => (err ? reject(err) : resolve(value)))
+const call = <K extends keyof SftpResults>(obj: SFTPWrapper, method: K, ...args: unknown[]) =>
+  new Promise<SftpResults[K]>((resolve, reject) => {
+    // ssh2 overloads have different arities; keep the dynamic dispatch at this boundary.
+    const invoke = obj[method] as (...args: unknown[]) => void
+    invoke.call(obj, ...args, (err: Error | undefined, value: SftpResults[K]) => (err ? reject(err) : resolve(value)))
   })
 
-const sftpOf = (client) =>
-  new Promise((resolve, reject) => client.sftp((err, s) => (err ? reject(err) : resolve(s))))
+const sftpOf = (client: ssh2.Client) =>
+  new Promise<SFTPWrapper>((resolve, reject) => client.sftp((err, s) => (err ? reject(err) : resolve(s))))
 
 /* -------------------------------------------------------------------------- */
 /* the plugin's Windows command shape */
