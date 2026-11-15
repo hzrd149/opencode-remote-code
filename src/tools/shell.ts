@@ -55,12 +55,14 @@ export function createShellTool(ctx: RemoteToolContext): RemoteToolDefinition {
     output: {
       type: "object",
       properties: {
+        exitCode: { type: "number" },
+        wallTimeSeconds: { type: "number" },
         exit: { type: "number" },
         output: { type: "string" },
         truncated: { type: "boolean" },
         status: { type: "string", enum: ["completed"] },
       },
-      required: ["exit", "output", "truncated", "status"],
+      required: ["exitCode", "wallTimeSeconds", "exit", "output", "truncated", "status"],
       additionalProperties: false,
     },
 
@@ -119,6 +121,7 @@ export function createShellTool(ctx: RemoteToolContext): RemoteToolDefinition {
       // 4. Run it. `cleanup` is in a `finally` on purpose: when exec throws
       //    (timeout, dropped connection) the staged temp script must still go.
       let result: ExecResult
+      const started = performance.now()
       try {
         result = await ctx.pool.exec(staged.command, {
           timeout,
@@ -163,7 +166,16 @@ export function createShellTool(ctx: RemoteToolContext): RemoteToolDefinition {
       }
 
       return {
-        output: { exit: result.exitCode, output, truncated: false, status: "completed" },
+        // Core 2.3 uses exitCode/wallTimeSeconds; older native codecs use
+        // exit/truncated/status. Both codecs select their declared fields.
+        output: {
+          exitCode: result.exitCode,
+          wallTimeSeconds: (performance.now() - started) / 1000,
+          exit: result.exitCode,
+          output,
+          truncated: false,
+          status: "completed",
+        },
         content: output,
         metadata: {
           status: "completed",
