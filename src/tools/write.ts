@@ -1,7 +1,7 @@
 /**
  * `write` — create or overwrite one remote file via the local mirror.
  *
- * V3 plumbing (DESIGN-V3 §7.3 / §8.3): the remote path is canonicalised by
+ * Remote plumbing: the remote path is canonicalised by
  * `RemotePathOps` (through `resolveRemotePath`), the single file being written is
  * pulled with `SyncEngine.ensureLocal()` and pushed back with
  * `SyncEngine.commit()`. V2 re-sent every tracked file on every call; V3 touches

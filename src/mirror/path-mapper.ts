@@ -1,5 +1,5 @@
 /**
- * PathMapper v3 — unambiguous mirror namespace layout (DESIGN-V3 §8.1, §5.2).
+ * PathMapper — unambiguous mirror namespace layout.
  *
  * Layout:
  *

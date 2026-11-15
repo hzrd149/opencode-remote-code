@@ -1,7 +1,7 @@
 /**
  * `edit` — precise string replacement inside one remote file, via the local mirror.
  *
- * V3 plumbing (DESIGN-V3 §7.3 / §8.3): `resolveRemotePath()` for the path,
+ * Remote plumbing: `resolveRemotePath()` for the path,
  * `ctx.sync.ensureLocal()` for the single-file pull and `ctx.sync.commit()` for
  * the single-file push (V2 transferred every tracked file in both directions).
  * The line-ending helpers now live in `./text.js` and are shared with

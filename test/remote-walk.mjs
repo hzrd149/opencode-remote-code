@@ -2,7 +2,7 @@
  * test/remote-walk.mjs — `walk()`, `searchFiles()` and the SFTP error mapping of
  * `createRemoteFs()`, all against in-memory fakes (no SSH, no network).
  *
- * Covers DESIGN-V3 §7.1–§7.4:
+ * Coverage:
  *   walk    depth limit, ignore list, symlinked dirs not followed, maxEntries
  *           truncation, includeDirs, unreadable directories, ordering, time budget
  *   search  glob include filtering, CRLF handling, binary skip (extension + NUL),

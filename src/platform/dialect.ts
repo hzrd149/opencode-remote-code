@@ -1,6 +1,6 @@
 /**
  * RemoteDialect — the only abstraction that knows how to turn a *script* into
- * an SSH exec command string (DESIGN-V3 §6).
+ * an SSH exec command string.
  *
  * Only the `shell` tool ever touches a remote shell, so all quoting/encoding
  * differences between POSIX shells and PowerShell die here. Everything else in

@@ -1,5 +1,5 @@
 /**
- * `shell` — the ONE tool allowed to touch the remote shell (DESIGN-V3 §3.2, §7.3).
+ * `shell` — the ONE tool allowed to touch the remote shell.
  *
  * Everything platform-specific about running a command lives in
  * `ctx.dialect.buildCommand()`: POSIX turns the script into `cd <cwd> && <script>`,

@@ -15,8 +15,8 @@
 #
 # Since 3.0.0 the REMOTE_* environment variables were deleted (the plugin runs
 # inside a shared background service that does not inherit your shell, so they
-# were never reliable). Nothing here can configure the remote — see AGENTS.md
-# and MIGRATION-V3.md.
+# were never reliable). Nothing here can configure the remote — see README.md
+# for configuration details.
 #
 # What this script does: it pins a stable local working directory derived from
 # the remote target, so OpenCode sessions do not "disappear" when you launch
@@ -123,7 +123,7 @@ if [ -n "$REMOTE_SSH" ]; then export REMOTE_SSH; fi
 if [ -n "$REMOTE_WORKDIR" ]; then export REMOTE_WORKDIR; fi
 if [ -n "$REMOTE_PASSWORD" ]; then export REMOTE_PASSWORD; fi
 
-echo "[remote-opencode] note: the remote is configured in opencode.jsonc plugin options (see AGENTS.md)." >&2
+echo "[remote-opencode] note: the remote is configured in opencode.jsonc plugin options (see README.md)." >&2
 echo "[remote-opencode] session directory: $SESSION_DIR" >&2
 
 exec opencode "${OPENCODE_ARGS[@]}"

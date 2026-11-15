@@ -1,5 +1,5 @@
 /**
- * Bounded remote tree walk, shared by `glob` and `grep` (DESIGN-V3 §7.2).
+ * Bounded remote tree walk, shared by `glob` and `grep`.
  *
  * Pure SFTP: `RemoteFs.readdir` calls only, no `find`, no shell. Two things
  * matter here and both are about not hanging the agent:

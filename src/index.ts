@@ -34,7 +34,7 @@ export default Plugin.define({
 
   async setup(ctx: PluginContext) {
     // ---------------------------------------------------------------------
-    // 1. Config (DESIGN-V3 §9). Nothing is written and no connection is
+    // 1. Config. Nothing is written and no connection is
     //    opened until we know remote mode is configured.
     // ---------------------------------------------------------------------
     let config
@@ -75,7 +75,7 @@ export default Plugin.define({
     }
 
     // ---------------------------------------------------------------------
-    // 2. Transport + platform detection (DESIGN-V3 §6.4).
+    // 2. Transport + platform detection.
     //    Detection runs over SFTP only: one `realpath(".")` answers both
     //    "is this Windows?" and "what is the login home?".
     // ---------------------------------------------------------------------

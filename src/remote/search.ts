@@ -1,5 +1,5 @@
 /**
- * Content search (`grep`) over SFTP (DESIGN-V3 §7.3).
+ * Content search (`grep`) over SFTP.
  *
  * V2 shelled out to `rg --json` with a `grep -Ern` fallback; neither exists on a
  * Windows remote, and two implementations meant two dialects. V3 reads files

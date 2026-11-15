@@ -1,7 +1,7 @@
 /**
  * spike-windows.mjs — end-to-end proof that the **Windows transport** works.
  *
- * DESIGN-V3 §11.1 / §13 P0: the dev machine *is* Windows with a real PowerShell
+ * Run on Windows with a real PowerShell
  * 5.1, so the mock SSH server can emulate a Windows remote faithfully:
  *
  *   - exec   -> the plugin's real command shape is decoded and run by real
@@ -10,7 +10,7 @@
  *   - realpath(".") -> `/C:/Users/test/proj`
  *
  * This script needs **nothing from src/**: it builds the PowerShell command by
- * hand exactly like the plugin's windows dialect does (DESIGN-V3 §6.2) and then
+ * hand exactly like the plugin's windows dialect does and then
  * checks quoting, base64/UTF-16LE, exit codes, CLIXML, UTF-8 output, long-script
  * staging and the SFTP path space.
  *
@@ -102,10 +102,10 @@ const sftpOf = (client) =>
   new Promise((resolve, reject) => client.sftp((err, s) => (err ? reject(err) : resolve(s))))
 
 /* -------------------------------------------------------------------------- */
-/* the plugin's windows command shape (DESIGN-V3 §6.2)                        */
+/* the plugin's Windows command shape */
 /* -------------------------------------------------------------------------- */
 
-/** PowerShell script template from DESIGN-V3 §6.2, verbatim. */
+/** PowerShell script template matching src/platform/dialect-windows.ts. */
 function buildScript(payload, workdir = WORKDIR) {
   const wd = String(workdir).replace(/'/g, "''") // PS single-quote escaping
   const body = String(payload)

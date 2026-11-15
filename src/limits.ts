@@ -1,5 +1,5 @@
 /**
- * Shared limits and ignore defaults for the remote tools (DESIGN-V3 §7.2, §9).
+ * Shared limits and ignore defaults for the remote tools.
  *
  * These live in their own module so `config.ts` (which parses the `limits`
  * option) and `tools/*` (which consume the values) can share one shape without

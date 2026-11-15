@@ -1,5 +1,5 @@
 /**
- * Per-file mirror synchronisation (DESIGN-V3 §8.3).
+ * Per-file mirror synchronisation.
  *
  * V2's `pullAll()` / `pushAll()` transferred every tracked file before and after
  * every tool call (O(n) per edit). V3 pulls exactly the file being touched, and

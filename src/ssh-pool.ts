@@ -465,7 +465,7 @@ class ConnectionPool {
 }
 
 export async function createSSHPool(config: RemoteConfig): Promise<SSHPool> {
-  // Pool sizing is a plugin option now (DESIGN-V3 §9.2); the REMOTE_POOL_* env
+  // Pool sizing is a plugin option now; the REMOTE_POOL_* env
   // vars survive only as a fallback for the legacy test harnesses.
   const commandPoolSize =
     config.pool?.command ?? parseInt(process.env.REMOTE_POOL_COMMAND_SIZE || "3", 10)

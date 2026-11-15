@@ -1,5 +1,5 @@
 /**
- * POSIX sh/bash dialect (DESIGN-V3 §6.1) — behaviour identical to V2's
+ * POSIX sh/bash dialect — behaviour identical to V2's
  * `ssh-pool.ts:493-495`, just moved out of the transport layer.
  *
  * We deliberately do NOT wrap the script in `bash -lc`: the remote default shell

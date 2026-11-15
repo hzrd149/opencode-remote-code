@@ -2,19 +2,7 @@
 
 [English](README.md)
 
-> **3.0.0 是破坏性版本。** 相对 2.x 有两处变化：
->
-> 1. 远程可以是 **Windows**（OpenSSH for Windows + PowerShell 5.1/7），也可以是 **Linux / macOS**。
->    所有平台知识都收口在 `src/platform/`，7 个工具里不再出现任何平台假设。
-> 2. **全部配置搬进插件的 `options`**（`opencode.jsonc`）。`REMOTE_*` 环境变量、`--remote*` 参数
->    和 `sudoPassword` 已删除——V2 的插件跑在后台共享服务里，继承不到你 shell 的环境变量。
->
-> 从 2.x 升级请看 **[MIGRATION-V3.md](MIGRATION-V3.md)**（十分钟清单，英文）。
-> 行为参考：**[AGENTS.md](AGENTS.md)**（英文）。设计稿：**[DESIGN-V3.md](DESIGN-V3.md)**。
-> 历史文档：**[MIGRATION-V2.md](MIGRATION-V2.md)**（V1→V2 API 契约）、
-> **[PORTING-NOTES.md](PORTING-NOTES.md)**（V1→V2 逐文件移植记录）。
->
-> Fork 自 [zz6zz666/opencode-remote-code](https://github.com/zz6zz666/opencode-remote-code)。
+Fork 自 [zz6zz666/opencode-remote-code](https://github.com/zz6zz666/opencode-remote-code)。
 
 一款 OpenCode 插件，让 AI Agent 能够通过 SSH 直接操控远程机器——**远程端零依赖**，仅需 SSH 守护
 进程即可。无需在远程安装任何 agent、运行时或依赖。
@@ -51,24 +39,6 @@ PowerShell（Windows 10+ 自带 5.1），别的一概不需要。
 
 ---
 
-## 🔌 独立 MCP Server
-
-当前仓库是 **OpenCode 插件版**：
-<https://github.com/zz6zz666/opencode-remote-code>
-
-同一 GitHub 账号下也会有独立 MCP server 版本：
-<https://github.com/zz6zz666/mcp-remote-code>
-
-两个项目有相同的零侵入 SSH 动机，但面向不同工作流：
-
-- **OpenCode 插件版**：深度绑定 OpenCode。它覆盖原生工具，把远端机器完全伪装成 agent
-  workspace。运行时环境完全在远端，本地目录不会自然进入 agent 的普通视野。
-- **MCP server 版**：向任意 MCP 客户端暴露带命名空间的 `remote_*` 工具。本地和远端工作可以并存，
-  agent 可以在本地维护设计笔记或查找表，同时在 SSH 目标上执行远端命令、编辑、patch、pull、push
-  和仿真任务。
-
----
-
 ## 📋 前置要求
 
 - **OpenCode V2**（本分支面向 `@opencode/plugin` ^2.1.2）
@@ -88,7 +58,7 @@ PowerShell（Windows 10+ 自带 5.1），别的一概不需要。
 
 ```bash
 # 1. 取源码并构建（插件带运行时依赖，必须构建）
-git clone https://github.com/zz6zz666/opencode-remote-code.git
+git clone https://github.com/vibed-this/opencode-remote-code.git
 cd opencode-remote-code
 npm install
 npm run build            # tsc + scripts/postbuild.cjs（把 src/prompts 拷进 dist/prompts）

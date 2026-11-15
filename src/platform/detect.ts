@@ -1,5 +1,5 @@
 /**
- * Remote platform detection (DESIGN-V3 §6.4).
+ * Remote platform detection.
  *
  * Deliberately a **pure function over `DetectProbe`** — it must not import
  * `ssh2` (or anything transport-related), so it can be unit-tested and so the

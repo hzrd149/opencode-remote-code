@@ -1,5 +1,5 @@
 /**
- * Diagnostic logging (DESIGN-V3 §9.2: `options.debug` drives this).
+ * Diagnostic logging (`options.debug` drives this).
  *
  * The log lives at `~/.opencode/remote-code-debug.log` and is append-only. Two
  * hard rules, both learned the hard way in V2 (`src/index.ts` used to inline

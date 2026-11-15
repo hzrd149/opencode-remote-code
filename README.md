@@ -2,21 +2,7 @@
 
 [中文](README.zh-CN.md)
 
-> **Version 3.0.0 is a breaking release.** Two things changed since 2.x:
->
-> 1. The remote may now be **Windows** (OpenSSH for Windows + PowerShell 5.1/7) as well as
->    **Linux / macOS**. All platform knowledge lives in `src/platform/`; the seven tools contain
->    none of it.
-> 2. **All configuration moved into the plugin's `options`** in `opencode.jsonc`. The `REMOTE_*`
->    environment variables, the `--remote*` arguments and `sudoPassword` were deleted — V2 runs
->    plugins inside a shared background service that never inherits your shell environment.
->
-> Upgrading from 2.x? Read **[MIGRATION-V3.md](MIGRATION-V3.md)** (ten-minute checklist).
-> Behaviour reference: **[AGENTS.md](AGENTS.md)**. Design: **[DESIGN-V3.md](DESIGN-V3.md)**
-> (Chinese). Historical: **[MIGRATION-V2.md](MIGRATION-V2.md)** (V1→V2 API contract),
-> **[PORTING-NOTES.md](PORTING-NOTES.md)** (per-file V1→V2 port log).
->
-> Forked from [zz6zz666/opencode-remote-code](https://github.com/zz6zz666/opencode-remote-code).
+Forked from [zz6zz666/opencode-remote-code](https://github.com/zz6zz666/opencode-remote-code).
 
 An OpenCode plugin that lets AI agents operate remote machines over SSH — with **zero footprint**
 on the remote side. The remote machine only needs `sshd`; no agent, runtime, or dependency
@@ -56,25 +42,6 @@ PowerShell (5.1 ships with Windows 10+), and nothing else.
 
 ---
 
-## 🔌 Standalone MCP Server
-
-This repository is the **OpenCode plugin** version:
-<https://github.com/zz6zz666/opencode-remote-code>
-
-There is also a standalone MCP server version planned for the same GitHub account:
-<https://github.com/zz6zz666/mcp-remote-code>
-
-The two projects share the same zero-footprint SSH motivation, but target different workflows:
-
-- **OpenCode plugin**: tightly integrated with OpenCode. It overrides native tools so the remote
-  machine is fully masqueraded as the agent workspace. The runtime environment is remote, and
-  local directories are intentionally not part of the agent's normal view.
-- **MCP server**: exposes namespaced `remote_*` tools to any MCP client. Local and remote work can
-  coexist, so an agent can keep local design notes or lookup tables while running remote commands,
-  edits, patches, pulls, pushes, and simulations on the SSH target.
-
----
-
 ## 📋 Prerequisites
 
 - **OpenCode V2** (this fork targets `@opencode/plugin` ^2.1.2)
@@ -95,7 +62,7 @@ The two projects share the same zero-footprint SSH motivation, but target differ
 
 ```bash
 # 1. Get the source and build it (the plugin has runtime deps, so a build is required)
-git clone https://github.com/zz6zz666/opencode-remote-code.git
+git clone https://github.com/vibed-this/opencode-remote-code.git
 cd opencode-remote-code
 npm install
 npm run build            # tsc + scripts/postbuild.cjs (copies src/prompts → dist/prompts)

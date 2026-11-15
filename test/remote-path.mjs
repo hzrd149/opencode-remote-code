@@ -1,7 +1,7 @@
 /**
  * test/remote-path.mjs — RemotePathOps conformance for BOTH platforms.
  *
- * Covers DESIGN-V3 §5 (path semantics) and §5.1 (the Windows semantics table):
+ * Covers POSIX and Windows path semantics:
  * canonical form, drive case, `..` escape from the drive root, case-insensitive
  * comparison/containment, root boundaries and the SFTP wire form.
  *

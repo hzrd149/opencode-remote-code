@@ -1,5 +1,5 @@
 /**
- * `glob` over SFTP (DESIGN-V3 §7.3).
+ * `glob` over SFTP.
  *
  * V2 shelled out to `rg --files --sortr=modified`, with a `find + stat + sort`
  * fallback; neither exists on a Windows remote and the fallback could not

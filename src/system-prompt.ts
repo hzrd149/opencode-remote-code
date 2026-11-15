@@ -1,5 +1,5 @@
 /**
- * System prompt for remote mode (DESIGN-V3 §10).
+ * System prompt for remote mode.
  *
  * Supersedes `src/remote-system-prompt.ts` (V2), which did its own SSH round
  * trip (`cat AGENTS.md`) and assumed a POSIX remote. V3 has two rules here:

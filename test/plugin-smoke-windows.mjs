@@ -1,6 +1,6 @@
 /**
  * plugin-smoke-windows.mjs — the real end-to-end proof that the **plugin** works
- * against a **Windows** remote (DESIGN-V3 §11.1 / §11.2 / §11.3).
+ * against a **Windows** remote.
  *
  * `test/spike-windows.mjs` proves the *transport* by hand-building the PowerShell
  * command; this file goes one level up and proves the shipped product:
@@ -384,8 +384,7 @@ export async function runPluginSmokeWindows(opts) {
   })
 
   // ---------------------------------------------------------------------------
-  // Exit-code propagation end to end (DESIGN-V3 §7.3 / §12: "the exit code is
-  // trusted").
+  // Exit-code propagation end to end: the exit code is trusted.
   //
   // This check is the regression guard for a real bug that shipped once in the
   // rewrite: `execOnClient()` chained the channel handlers onto `stream.stderr`

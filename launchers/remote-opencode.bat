@@ -16,8 +16,8 @@ REM   }]
 REM
 REM Since 3.0.0 the REMOTE_* environment variables were deleted (the plugin runs
 REM inside a shared background service that does not inherit your shell, so they
-REM were never reliable). Nothing here can configure the remote -- see AGENTS.md
-REM and MIGRATION-V3.md.
+REM were never reliable). Nothing here can configure the remote -- see README.md
+REM for configuration details.
 REM
 REM What this script does: it pins a stable local working directory derived from
 REM the remote target, so OpenCode sessions do not "disappear" when you launch
@@ -161,7 +161,7 @@ REM environment at all in 3.x, so they cannot activate remote mode. Undefined
 REM ones are simply left unset. (Variables set with "set" are already part of
 REM the child environment.)
 
-echo [remote-opencode] note: the remote is configured in opencode.jsonc plugin options (see AGENTS.md).
+echo [remote-opencode] note: the remote is configured in opencode.jsonc plugin options (see README.md).
 echo [remote-opencode] session directory: %SESSION_DIR%
 
 opencode %OPENCODE_ARGS%

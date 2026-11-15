@@ -1,5 +1,5 @@
 /**
- * Windows / PowerShell dialect (DESIGN-V3 §6.2, validated on real PS 5.1).
+ * Windows / PowerShell dialect (validated on real PS 5.1).
  *
  * Two hard problems this file solves:
  *

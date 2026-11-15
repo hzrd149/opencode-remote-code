@@ -1,8 +1,8 @@
 /**
  * test/path-mapper.mjs — PathMapper / ManifestManager / SyncEngine (mirror v3).
  *
- * Covers DESIGN-V3 §8 (namespace layout, manifest v2, per-file sync), §5.2
- * (case-insensitive collisions) and risk S5 (local long paths).
+ * Covers namespace layout, manifest v2, per-file sync, case-insensitive
+ * collisions and local long paths.
  *
  *   npm run build && node test/path-mapper.mjs      # exit 0 = all PASS
  *

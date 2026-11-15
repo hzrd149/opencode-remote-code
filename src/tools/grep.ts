@@ -1,5 +1,5 @@
 /**
- * `grep` over SFTP (DESIGN-V3 §7.3/§7.4).
+ * `grep` over SFTP.
  *
  * V2 ran `rg --json` with a `grep -Ern` fallback; V3 walks the tree with bounded
  * SFTP `readdir`s, reads candidate files over SFTP and matches with the JS

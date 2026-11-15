@@ -1,5 +1,5 @@
 /**
- * Plugin option parsing — DESIGN-V3 §9 (breaking rewrite).
+ * Plugin option parsing.
  *
  * Two ways to describe a target, and **only** these two:
  *

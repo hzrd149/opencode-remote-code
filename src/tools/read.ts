@@ -1,5 +1,5 @@
 /**
- * `read` over SFTP (DESIGN-V3 §7.3).
+ * `read` over SFTP.
  *
  * V2 detected the remote type with a shell `test`/`ls -1pA` triple and sniffed
  * binaries with `file`, `dd` and `od` — all POSIX-only. V3 asks SFTP instead:

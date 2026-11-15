@@ -1,5 +1,5 @@
 /**
- * RemotePathOps — remote path semantics for POSIX and Windows (DESIGN-V3 §5).
+ * RemotePathOps — remote path semantics for POSIX and Windows.
  *
  * This is the ONLY file allowed to import `node:path` for remote paths. Every
  * other layer works with the canonical form:

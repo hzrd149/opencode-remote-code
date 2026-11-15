@@ -17,11 +17,15 @@
   },
   "files": [
     "dist",
-    "index.js"
+    "index.js",
+    "launchers",
+    "README.zh-CN.md",
+    "pic.png"
   ],
   "scripts": {
     "build": "tsc",
     "postbuild": "node scripts/postbuild.cjs",
+    "prepack": "npm run build",
     "dev": "tsc --watch",
     "lint": "tsc --noEmit",
     "test": "node test/run-tests.mjs"

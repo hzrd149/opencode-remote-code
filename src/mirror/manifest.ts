@@ -1,5 +1,5 @@
 /**
- * Manifest v2 (DESIGN-V3 §8.2).
+ * Manifest v2.
  *
  *   {
  *     "version": 2,

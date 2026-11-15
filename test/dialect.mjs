@@ -1,9 +1,9 @@
 /**
  * test/dialect.mjs — RemoteDialect conformance (no SSH needed).
  *
- * Covers DESIGN-V3 §6.1 (posix `cd <quoted> && script`), §6.2 (the validated
+ * Covers POSIX `cd <quoted> && script`, the validated
  * PS 5.1 template, `-EncodedCommand`, the `-File` staging fallback and its
- * cleanup), §6.3 (UTF-8 with GB18030 fallback) and the CLIXML scrubbing that
+ * cleanup, UTF-8 with GB18030 fallback and the CLIXML scrubbing that
  * PowerShell's error stream forces on us.
  *
  *   npm run build && node test/dialect.mjs      # exit 0 = all PASS

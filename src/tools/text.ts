@@ -1,6 +1,5 @@
 /**
- * Line-ending helpers shared by `write`, `edit` and `patch` (DESIGN-V3 §7.3,
- * "行尾统一").
+ * Line-ending helpers shared by `write`, `edit` and `patch`.
  *
  * V2 only kept CRLF in `edit.ts` (three private helpers at the top of the file);
  * `write.ts` and `patch.ts` re-encoded everything as LF, so every edit of a

@@ -1,6 +1,5 @@
 /**
  * RemoteFs — the single filesystem primitive the tool layer is allowed to use
- * (DESIGN-V3 §3.2/§3.4, §7.1).
  *
  * Everything here goes through SFTP, so the same code works against a Windows
  * and a POSIX remote; nothing in this file (or in `walk`/`glob`/`search`) knows

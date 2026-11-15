@@ -1,5 +1,5 @@
 /**
- * The dependency bundle handed to every remote tool factory (DESIGN-V3 §7.3).
+ * The dependency bundle handed to every remote tool factory.
  *
  * Tools are framework-free objects (`{ name, description, input, execute }`), so
  * everything they need is passed in here instead of being imported at module

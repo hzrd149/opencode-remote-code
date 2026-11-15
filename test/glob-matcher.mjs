@@ -1,7 +1,7 @@
 /**
  * test/glob-matcher.mjs — pure tests for the SFTP-era glob matcher.
  *
- * Covers DESIGN-V3 §7.4 and the semantics `glob` / `grep --include` depend on:
+ * Covers the semantics `glob` / `grep --include` depend on:
  * `*` / `?` never cross `/`, `**` (and `**\/` = zero or more dirs) does,
  * `{a,b}` alternation (nested), `[abc]` / `[!abc]` classes, basename-only
  * patterns, patterns containing `/`, `./` normalisation, backslash separators,

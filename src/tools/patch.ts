@@ -2,7 +2,7 @@
  * `patch` — apply a native OpenCode patch (`*** Begin Patch …`) or a unified
  * diff to remote files through the local mirror.
  *
- * V3 plumbing (DESIGN-V3 §7.3 / §8.3):
+ * Remote plumbing:
  *  - remote paths go through `resolveRemotePath()` (nothing here knows about
  *    POSIX path syntax);
  *  - each involved file is pulled/pushed on its own (`ensureLocal` / `commit`)

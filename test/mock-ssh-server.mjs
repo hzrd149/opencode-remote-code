@@ -795,7 +795,7 @@ function attachShell(stream) {
  * @param {string} [options.host]     listen address (default 127.0.0.1)
  * @param {string} [options.bashPath] bash to use for exec (posix dialect)
  * @param {"posix"|"windows"} [options.dialect] which remote platform to emulate
- *        (default "posix"; see DESIGN-V3.md §11.1)
+ *        (default "posix")
  * @param {boolean}[options.pwsh]     windows dialect: prefer `pwsh` (PS 7) when it
  *        is on PATH (falls back to powershell.exe)
  * @param {string} [options.pwshPath]     explicit pwsh executable override
@@ -1124,7 +1124,7 @@ function unquote(text) {
 
 /**
  * Turn the incoming SSH exec command string into the PowerShell script text the
- * mock should run. Recognises the two shapes the plugin produces (DESIGN-V3 §6.2):
+ * mock should run. Recognises the two shapes the plugin produces:
  *
  *   powershell.exe ... -EncodedCommand <base64(UTF-16LE(script))>
  *   powershell.exe ... -File "<path>"           (long scripts staged over SFTP)

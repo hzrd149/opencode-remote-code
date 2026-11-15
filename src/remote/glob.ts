@@ -1,5 +1,5 @@
 /**
- * Glob → RegExp matcher (DESIGN-V3 §7.3/§7.4).
+ * Glob → RegExp matcher.
  *
  * Replaces `rg --glob` / `find -name`. The semantics are deliberately
  * ripgrep-flavoured, because that is what the model has been trained on:
