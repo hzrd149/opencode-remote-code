@@ -2,6 +2,9 @@
 
 [English](README.md)
 
+个人分支的 npm 包名为 **`@hzrd149/opencode-remote-code`**。发布配置保留在 `main`，
+功能分支用于向上游提交独立 PR。
+
 Fork 自 [zz6zz666/opencode-remote-code](https://github.com/zz6zz666/opencode-remote-code)。
 
 一款 OpenCode 插件，让 AI Agent 能够通过 SSH 直接操控远程机器——**远程端零依赖**，仅需 SSH 守护
@@ -56,9 +59,12 @@ PowerShell（Windows 10+ 自带 5.1），别的一概不需要。
 
 ## 🚀 快速开始
 
+发布后，可在下面的配置中使用 `"package": "@hzrd149/opencode-remote-code"`。
+使用本地源码时，先构建，再将 `package` 设为源码目录的绝对路径：
+
 ```bash
 # 1. 取源码并构建（插件带运行时依赖，必须构建）
-git clone https://github.com/vibed-this/opencode-remote-code.git
+git clone https://github.com/hzrd149/opencode-remote-code.git
 cd opencode-remote-code
 npm install
 npm run build            # tsc + scripts/postbuild.cjs（把 src/prompts 拷进 dist/prompts）

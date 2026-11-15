@@ -1,8 +1,11 @@
 {
-  "name": "opencode-remote-code",
+  "name": "@hzrd149/opencode-remote-code",
   "version": "3.0.1",
   "description": "OpenCode plugin that lets AI agents edit and run commands on a remote machine over SSH — Windows (OpenSSH + PowerShell) or POSIX — with zero footprint on the remote side",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -45,12 +48,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/vibed-this/opencode-remote-code.git"
+    "url": "https://github.com/hzrd149/opencode-remote-code.git"
   },
   "bugs": {
-    "url": "https://github.com/vibed-this/opencode-remote-code/issues"
+    "url": "https://github.com/hzrd149/opencode-remote-code/issues"
   },
-  "homepage": "https://github.com/vibed-this/opencode-remote-code#readme",
+  "homepage": "https://github.com/hzrd149/opencode-remote-code#readme",
   "license": "MIT",
   "keywords": [
     "opencode",

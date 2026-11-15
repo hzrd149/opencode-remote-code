@@ -2,6 +2,9 @@
 
 [中文](README.zh-CN.md)
 
+Personal fork published as **`@hzrd149/opencode-remote-code`**. Fork-specific
+packaging lives on `main`; feature branches are kept focused for upstream PRs.
+
 Forked from [zz6zz666/opencode-remote-code](https://github.com/zz6zz666/opencode-remote-code).
 
 An OpenCode plugin that lets AI agents operate remote machines over SSH — with **zero footprint**
@@ -60,9 +63,12 @@ PowerShell (5.1 ships with Windows 10+), and nothing else.
 
 ## 🚀 Quick start
 
+Once published, use `"package": "@hzrd149/opencode-remote-code"` in the configuration
+below. To use a local checkout instead, build it and use its absolute path:
+
 ```bash
 # 1. Get the source and build it (the plugin has runtime deps, so a build is required)
-git clone https://github.com/vibed-this/opencode-remote-code.git
+git clone https://github.com/hzrd149/opencode-remote-code.git
 cd opencode-remote-code
 npm install
 npm run build            # tsc + scripts/postbuild.cjs (copies src/prompts → dist/prompts)
