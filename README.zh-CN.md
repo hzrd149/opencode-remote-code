@@ -6,6 +6,9 @@
 `read`、`write`、`edit` 和 `patch` 指向远端：命令通过 SSH 执行，文件工具
 通过 SFTP 操作。远端无需安装 Agent。
 
+**在 OpenCode 全局配置中安装一次，即可用 `/remote connect` 将当前会话切换到 SSH。**
+其他会话仍使用本地工具；用 `/remote disconnect` 切回本地。
+
 ## 环境要求
 
 - OpenCode 2.2.7+（需要 V2 指令来源元数据），兼容 [package.json](package.json) 中的 `@opencode/plugin` 版本。
@@ -13,9 +16,11 @@
 - 远端提供 SSH、SFTP 和 POSIX shell；Windows 远端需 OpenSSH for Windows
   和 PowerShell 5.1/7。远端无需 Node.js、Python、Git 或 ripgrep。
 
-## 快速开始
+## 快速开始：全局安装，按会话连接
 
-使用 `package.json` 固定的 pnpm 版本构建本地源码：
+### 1. 构建插件
+
+该 scoped npm 包尚未发布。使用 `package.json` 固定的 pnpm 版本构建本地源码：
 
 ```sh
 git clone https://github.com/hzrd149/opencode-remote-code.git
@@ -24,39 +29,54 @@ pnpm install --frozen-lockfile
 pnpm run build
 ```
 
-在 `opencode.jsonc` 中添加以下配置，替换路径及连接信息：
+### 2. 全局启用
+
+在 **`~/.config/opencode/opencode.jsonc`** 中的 `plugins` 添加以下条目
+（设置了 `XDG_CONFIG_HOME` 时使用 `$XDG_CONFIG_HOME/opencode/opencode.jsonc`）。
+将路径替换为已构建源码的绝对路径，并保留其他配置：
 
 ```jsonc
 {
+  "$schema": "https://opencode.ai/config.json",
   "plugins": [
     {
       "package": "/absolute/path/to/opencode-remote-code",
-      "options": {
-        "ssh": "ssh user@192.0.2.10",
-        "key": "~/.ssh/id_ed25519",
-        "workdir": "/home/user/project",
-        "activateIn": "~/.opencode/remote-sessions"
-      }
+      "options": { "runtime": true }
     }
   ]
 }
 ```
 
-在激活范围内创建本地会话目录，并从该目录启动 OpenCode：
+这样即可在各个项目中使用 `/remote`。会话初始使用本地工具，连接前不会建立 SSH。
+此全局运行时配置不要设置 `ssh`、`host` 或 `activateIn`。
+OpenCode 会自动重新加载配置，必要时使用 `/reload`。
 
-```sh
-mkdir -p ~/.opencode/remote-sessions/project
-cd ~/.opencode/remote-sessions/project
-opencode
+### 3. 将当前会话切换到 SSH
+
+在通常的项目目录打开 OpenCode，或使用已有会话，输入：
+
+```text
+/remote connect {"ssh":"alice@server.example","key":"~/.ssh/id_ed25519","workdir":"/srv/project"}
+/remote status
 ```
 
-修改配置后，请重启已运行的 OpenCode 服务。本分支发布后，可将本地源码路径
-替换为包名 `@hzrd149/opencode-remote-code`。
+连接后，**当前会话**的文件和 shell 工具在远端执行，工作目录为 `/srv/project`。
+其他会话不受影响。在同一会话继续聊天即可操作远端。切回本地：
+
+```text
+/remote disconnect
+```
+
+更换目标时先断开，再执行新的 `/remote connect`。Windows 工作目录可以使用
+`C:/Users/alice/project`。省略 `key` 时使用 OpenCode 服务可访问的 SSH agent，
+也可显式指定 `agentSocket`。密码只能通过运行时 RPC 传递，不能放入命令文本。
+发布后可将 `package` 路径替换为 `@hzrd149/opencode-remote-code`，保留
+`"options": { "runtime": true }`。
 
 ## 重要行为
 
-- **激活后，远程工具替代本地工具。** `activateIn` 匹配本地会话目录；
-  范围外仍使用本地工具。省略此项时，配置的远程目标在所有目录中生效。
+- **运行时模式按会话切换。** 若需固定目标，可省略 `runtime` 并在插件选项中配置
+  `ssh`/`host`。该模式的 `activateIn` 匹配本地会话目录；省略时固定目标在所有目录生效。
 - `workdir` 是**远程**路径，默认是 SSH 用户的主目录；相对路径和 `~` 均
   相对于该目录解析。Windows 绝对路径必须带盘符，例如 `C:/Users/me/project`。
 - 使用 `key` 或 `password` 认证。`ssh` 字符串仅被解析，不会直接执行，

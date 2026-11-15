@@ -6,6 +6,10 @@ Use OpenCode to work on a remote machine over SSH. The plugin redirects `shell`,
 `glob`, `grep`, `read`, `write`, `edit`, and `patch` to the remote target. Commands
 run over SSH; file tools use SFTP. No remote agent installation is required.
 
+**Install once in your global OpenCode config, then use `/remote connect` to switch
+the current session to SSH.** Other sessions stay local; `/remote disconnect`
+switches the session back to local tools.
+
 ## Requirements
 
 - OpenCode 2.2.7+ (V2 instruction-source metadata is required), compatible with the `@opencode/plugin` version in [package.json](package.json).
@@ -13,9 +17,12 @@ run over SSH; file tools use SFTP. No remote agent installation is required.
 - A remote SSH server with SFTP and a POSIX shell, or OpenSSH for Windows with
   PowerShell 5.1/7. No remote Node.js, Python, Git, or ripgrep is needed.
 
-## Quick start
+## Quick start: install globally, connect per session
 
-Build a local checkout using the pnpm version pinned in `package.json`:
+### 1. Build the plugin
+
+The scoped npm package is not published yet. Build a local checkout using the pnpm
+version pinned in `package.json`:
 
 ```sh
 git clone https://github.com/hzrd149/opencode-remote-code.git
@@ -24,42 +31,62 @@ pnpm install --frozen-lockfile
 pnpm run build
 ```
 
-Add an entry to `opencode.jsonc`, replacing the paths and connection details:
+### 2. Enable it globally
+
+Add this entry to `plugins` in **`~/.config/opencode/opencode.jsonc`** (or
+`$XDG_CONFIG_HOME/opencode/opencode.jsonc` when set). Use the absolute path to your
+built checkout and keep your other configuration entries:
 
 ```jsonc
 {
+  "$schema": "https://opencode.ai/config.json",
   "plugins": [
     {
       "package": "/absolute/path/to/opencode-remote-code",
-      "options": {
-        "ssh": "ssh user@192.0.2.10",
-        "key": "~/.ssh/id_ed25519",
-        "workdir": "/home/user/project",
-        "activateIn": "~/.opencode/remote-sessions"
-      }
+      "options": { "runtime": true }
     }
   ]
 }
 ```
 
-Create a local session directory inside that scope and start OpenCode there:
+This makes `/remote` available across projects. Sessions start with local tools;
+no SSH connection is opened until you connect. Leave `ssh`, `host`, and `activateIn`
+out of this global runtime configuration. OpenCode reloads configuration changes
+automatically; use `/reload` if needed.
 
-```sh
-mkdir -p ~/.opencode/remote-sessions/project
-cd ~/.opencode/remote-sessions/project
-opencode
+### 3. Switch the current session to SSH
+
+Open OpenCode in your usual project directory, or use an existing session. Enter:
+
+```text
+/remote connect {"ssh":"alice@server.example","key":"~/.ssh/id_ed25519","workdir":"/srv/project"}
+/remote status
 ```
 
-Restart an existing OpenCode service after changing its configuration. Once this
-fork is published, the package name will be `@hzrd149/opencode-remote-code`;
-use that in place of the local checkout path.
+Once connected, file and shell tools in **this session** operate on the remote
+machine, with `/srv/project` as the remote working directory. Other sessions are
+unaffected. Keep chatting in the same session to work remotely.
+
+To return to local tools:
+
+```text
+/remote disconnect
+```
+
+To change SSH targets, disconnect first, then run `/remote connect` with the new
+target. For a Windows target, use a path such as `C:/Users/alice/project`.
+Omit `key` to use an SSH agent available to the OpenCode service, or supply
+`agentSocket` explicitly. Passwords must use the runtime RPC, not command text.
+
+Once published, `@hzrd149/opencode-remote-code` can replace the local `package`
+path in the same global configuration; keep `"options": { "runtime": true }`.
 
 ## Important behavior
 
-### Runtime connections and CLI
+### Connect from the terminal
 
-For local and remote sessions in one location, configure the plugin with
-`"options": { "runtime": true }` (without `ssh` or `host`). Then run:
+With the global runtime configuration above, you can also connect before opening
+the OpenCode UI:
 
 ```sh
 node /absolute/path/to/opencode-remote-code/dist/cli-main.js alice@server.example --workdir /srv/project
@@ -68,15 +95,14 @@ node /absolute/path/to/opencode-remote-code/dist/cli-main.js alice@server.exampl
 The installed executable is `remote-opencode`. It captures the terminal's
 `SSH_AUTH_SOCK`, creates a stable local session directory, connects through typed
 RPC, and attaches to that session. No model call is needed to connect.
-In-session controls are `/remote status`, `/remote disconnect`, and
-`/remote connect {"ssh":"alice@server.example","workdir":"/srv/project"}`.
 Connections are session-specific; interrupted or failed remote sessions block
 file/shell tools until reconnect or explicit disconnect. Passwords use RPC,
 not slash-command text. Remote subagent delegation is disabled.
 
-- **Active sessions use remote tools instead of local tools.** `activateIn`
-  matches local session directories; outside that scope, local tools remain
-  available. Omit it to activate the configured target everywhere.
+- **Runtime mode switches one session at a time.** For a fixed target instead,
+  omit `runtime` and configure `ssh`/`host` in plugin options. In that mode,
+  `activateIn` restricts activation to matching local session directories;
+  without it, the configured target is active everywhere. See [configuration](docs/configuration.md).
 - `workdir` is a **remote** path. It defaults to the SSH user's home; relative
   paths and `~` resolve there. Windows absolute paths need a drive letter, such
   as `C:/Users/me/project`.
