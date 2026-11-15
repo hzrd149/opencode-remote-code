@@ -28,6 +28,8 @@ The runtime host test also uses a deterministic local chat endpoint to exercise
 all seven remote tools through Core's model/tool execution and output validation,
 plus native local delegation. This catches failures that direct `tool.execute()`
 probes bypass, including inherited output schemas and non-JSON result metadata.
+The runtime host test also exercises `/remote connect` with host-only defaults
+(local OS username and SFTP login home), quoted workdirs, and legacy JSON input.
 
 | Option | Effect |
 | --- | --- |
