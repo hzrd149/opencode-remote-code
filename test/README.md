@@ -386,16 +386,11 @@ Linux: backslash activation-scope matching and simulated long Windows mirror
 paths. These are unrelated to runtime routing; the POSIX mock-server and legacy
 plugin smoke sections pass.
 
-## CLI runtime integration
+## CLI launcher checks
 
-After building, run `node test/cli.mjs` for parsing, endpoint-boundary and child
-attachment checks. It is also included in the standard runner.
-
-Run `node test/cli-host.mjs` on Linux with OpenCode V2, `ssh-agent`, `ssh-add`, and
-`ssh-keygen` on PATH. It starts an isolated OpenCode server, isolated agent and
-mock SSH/SFTP target; no model calls or user configuration changes are made.
-It verifies typed HTTP RPC location/session routing, caller agent selection despite
-a stale service environment, remote reads, key auth, reconnect, wrong-location
-rejection, and fail-closed behavior after authentication failure. The TUI itself
-is replaced by an assertion callback; `cli.mjs` separately exercises real child
-process argument/env/exit handling. `OPENCODE_BIN` may select the test host binary.
+After building, run `node test/cli.mjs` (also in the standard runner). It checks
+arguments/defaults, caller agentSocket propagation, connect failure preventing
+attachment, and service/session selection using a stub client. On POSIX it also
+checks real child-process arguments, authentication environment and exit status.
+Runtime routing and SSH authentication are covered by their existing suites;
+these launcher checks do not require a real OpenCode host or SSH agent.

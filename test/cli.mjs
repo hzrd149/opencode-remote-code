@@ -1,10 +1,15 @@
 import assert from "node:assert/strict"
 import fs from "node:fs/promises"
 import path from "node:path"
+import os from "node:os"
 import { fileURLToPath } from "node:url"
+import { OpenCode } from "@opencode/client"
 import { parseArguments, sessionDirectory, assertLocalEndpoint, runCLI, attach } from "../dist/cli.js"
 
 const parsed = parseArguments(["alice@[::1]", "--workdir", "C:/My Project", "--port", "2222"])
+assert.deepEqual(parseArguments(["host"]), {
+  host: "host", user: os.userInfo().username, port: 22, workdir: "~", key: undefined, sessionID: undefined,
+})
 assert.equal(parsed.host, "::1")
 assert.equal(parsed.user, "alice")
 assert.equal(parsed.workdir, "C:/My Project")
@@ -26,9 +31,54 @@ await assert.rejects(runCLI(["host"], { env: {}, ensure: () => assert.fail("must
 assert.equal(await runCLI(["--help"], { ensure: () => assert.fail("help must not start service"), report() {} }), 0)
 console.log("PASS CLI arguments, target directory identity, local endpoint boundary, missing terminal agent")
 
+const root = fileURLToPath(new URL("../tmp_test_artifacts/", import.meta.url))
+await fs.mkdir(root, { recursive: true })
+const home = await fs.mkdtemp(path.join(root, "cli-flow-"))
+const make = Object.getOwnPropertyDescriptor(OpenCode, "make")
+try {
+  const directory = sessionDirectory(parseArguments(["host"]), home)
+  const endpoint = { url: "http://127.0.0.1:1234" }
+  const location = { directory }
+  let connected = false, fail = false, attached = 0
+  Object.defineProperty(OpenCode, "make", { configurable: true, value: options => {
+    assert.equal(options.baseUrl, endpoint.url)
+    return {
+      session: {
+        create: async input => { assert.deepEqual(input, { location }); return { id: "ses_test", location } },
+        command: async input => assert.deepEqual(input, { sessionID: "ses_test", name: "remote", text: "status" }),
+      },
+      rpc: () => ({
+        status: async () => ({ phase: "disconnected" }),
+        connect: async (input, context) => {
+          assert.deepEqual(input, { sessionID: "ses_test", target: {
+            host: "host", user: os.userInfo().username, port: 22, workdir: "~", agentSocket: "/caller/agent",
+          } })
+          assert.deepEqual(context, { location })
+          if (fail) throw Error("connect failed")
+          connected = true
+          return { phase: "connected" }
+        },
+      }),
+    }
+  } })
+  const deps = { home, env: { SSH_AUTH_SOCK: "/caller/agent" }, ensure: async () => endpoint, report() {},
+    attach: async (...args) => {
+      assert.equal(connected, true)
+      assert.deepEqual(args, [endpoint, directory, "ses_test", deps.env])
+      attached++
+      return 7
+    } }
+  assert.equal(await runCLI(["host"], deps), 7)
+  fail = true; connected = false
+  await assert.rejects(runCLI(["host"], deps), /connect failed/)
+  assert.equal(attached, 1, "connect failure must not open the TUI")
+  console.log("PASS CLI caller agent, connect-before-attach, service/session selection, failed connect")
+} finally {
+  Object.defineProperty(OpenCode, "make", make)
+  await fs.rm(home, { recursive: true, force: true })
+}
+
 if (process.platform !== "win32") {
-  const root = fileURLToPath(new URL("../tmp_test_artifacts/", import.meta.url))
-  await fs.mkdir(root, { recursive: true })
   const tmp = await fs.mkdtemp(path.join(root, "cli-attach-"))
   try {
     const report = path.join(tmp, "report.json")
