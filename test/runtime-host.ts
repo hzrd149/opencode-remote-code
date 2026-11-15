@@ -5,7 +5,7 @@ import path from "node:path"
 import { spawn } from "node:child_process"
 import { once } from "node:events"
 import { fileURLToPath } from "node:url"
-import { startMockServer } from "./mock-ssh-server.mjs"
+import { startMockServer } from "./mock-ssh-server.ts"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 await fs.mkdir(path.join(root, "tmp_test_artifacts"), { recursive: true })
@@ -27,7 +27,7 @@ const child = spawn(process.env.OPENCODE_BIN ?? "opencode", ["serve", "--hostnam
 })
 let logs = ""
 try {
-  const { url, password } = await new Promise((resolve, reject) => {
+  const { url, password } = await new Promise<{ url: string; password: string }>((resolve, reject) => {
     const timer = setTimeout(() => reject(Error("Private host did not start")), 30000)
     const collect = data => {
       logs += data

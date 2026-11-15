@@ -12,6 +12,19 @@ pnpm test --dialect=both      # requires Windows + PowerShell
 
 ## Runner options
 
+The default suite includes SSH-agent authentication, runtime routing and CLI unit
+checks. Optional real OpenCode V2 host tests use isolated configuration, a local
+SSH/SFTP server and temporary agents, without model calls:
+
+```sh
+pnpm exec tsx test/runtime-host.ts
+pnpm exec tsx test/cli-host.ts
+```
+
+Build first; these require `opencode` on PATH (or `OPENCODE_BIN`) and POSIX
+OpenSSH tools. The CLI test verifies the caller agent overrides a stale service
+agent and failed connections cannot fall back to local file execution.
+
 | Option | Effect |
 | --- | --- |
 | `--dialect=posix\|windows\|both` | Remote dialect matrix; default `both` on Windows, `posix` elsewhere |

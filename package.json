@@ -12,6 +12,9 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "remote-opencode": "dist/cli-main.js"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -45,6 +48,7 @@
     "@opencode/plugin": "^2.2.7"
   },
   "dependencies": {
+    "@opencode/client": "2.2.7",
     "diff": "^9.0.0",
     "ssh2": "^1.17.0"
   },

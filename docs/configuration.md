@@ -3,7 +3,9 @@
 [README](../README.md) · [Usage and troubleshooting](usage.md)
 
 Configure the remote through `plugins[].options` in `opencode.jsonc`. Without
-`ssh` or `host`, the plugin stays dormant. Invalid target configuration is
+`ssh` or `host`, the plugin stays dormant unless `runtime: true` is set. Runtime
+mode exposes per-session connection RPC and `/remote` commands; do not configure
+a static `ssh`/`host` alongside it. Invalid target configuration is
 reported and leaves OpenCode running without the remote tools.
 
 ## Options

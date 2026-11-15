@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { RuntimeRouter } from "../dist/runtime-router.js"
 
 const markers = new Set()
-const router = new RuntimeRouter(async (id, remote) => remote ? markers.add(id) : markers.delete(id))
+const router = new RuntimeRouter(async (id, remote) => { if (remote) markers.add(id); else markers.delete(id) })
 let localCalls = 0
 let remoteCalls = 0
 let closed = 0

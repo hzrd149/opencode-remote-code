@@ -115,6 +115,7 @@ if (options.help) {
  * assertions and finish in well under a second each.
  */
 const UNIT_SUITES = [
+  { script: "cli.ts", label: "CLI launcher suite", slow: false },
   { script: "runtime-router.ts", label: "runtime router suite", slow: false },
   { script: "ssh-agent-auth.ts", label: "SSH-agent authentication suite", slow: false },
   { script: "system-prompt.ts", label: "remote context suite", slow: false },

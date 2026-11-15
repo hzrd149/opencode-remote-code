@@ -56,6 +56,24 @@ use that in place of the local checkout path.
 
 ## Important behavior
 
+### Runtime connections and CLI
+
+For local and remote sessions in one location, configure the plugin with
+`"options": { "runtime": true }` (without `ssh` or `host`). Then run:
+
+```sh
+node /absolute/path/to/opencode-remote-code/dist/cli-main.js alice@server.example --workdir /srv/project
+```
+
+The installed executable is `remote-opencode`. It captures the terminal's
+`SSH_AUTH_SOCK`, creates a stable local session directory, connects through typed
+RPC, and attaches to that session. No model call is needed to connect.
+In-session controls are `/remote status`, `/remote disconnect`, and
+`/remote connect {"ssh":"alice@server.example","workdir":"/srv/project"}`.
+Connections are session-specific; interrupted or failed remote sessions block
+file/shell tools until reconnect or explicit disconnect. Passwords use RPC,
+not slash-command text. Remote subagent delegation is disabled.
+
 - **Active sessions use remote tools instead of local tools.** `activateIn`
   matches local session directories; outside that scope, local tools remain
   available. Omit it to activate the configured target everywhere.
@@ -104,6 +122,22 @@ MOCK_SSH_BASH=/bin/bash pnpm test --dialect=posix
 
 Tests use Node + `tsx`; Windows integration tests need Windows and PowerShell.
 See the [test guide](test/README.md) for platform requirements and runner options.
+
+Run `pnpm dev` to build the plugin and open an interactive OpenCode session with
+the local build and runtime connections enabled. OpenCode must be on `PATH`.
+The launcher uses a private server (`--standalone`) and an ignored local session
+directory at `tmp_test_artifacts/dev`; your usual providers and credentials remain
+available. Inside the session, connect to a remote:
+
+```text
+/remote connect {"ssh":"alice@server.example","workdir":"/srv/project"}
+```
+
+Use your terminal's SSH agent, or add `"key":"~/.ssh/id_ed25519"` to the connection
+options. Check `/remote status` to confirm the connection. Additional OpenCode
+flags can be passed through, for example `pnpm dev --continue`.
+After source changes, exit and rerun `pnpm dev` to load a fresh build.
+`pnpm dev:watch` runs only the TypeScript compiler in watch mode.
 
 ## Attribution and license
 

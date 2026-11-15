@@ -23,7 +23,7 @@ suites directly. See the test guide for host requirements.
 ## Architecture and invariants
 
 - `src/index.ts`: plugin setup, tool registration, context hook, cleanup.
-- `src/config.ts`: plugin options only. No target means dormant with no side
+- `src/config.ts`: plugin options only. Without runtime opt-in, no target means dormant with no side
   effects. Invalid configuration must not crash OpenCode. `activateIn` scopes
   activation to local session directories with boundary-safe matching.
 - `src/platform/`: all remote path, shell, decoding and detection knowledge.
@@ -34,6 +34,10 @@ suites directly. See the test guide for host requirements.
   `write`, `edit`, `patch`. Only `shell` executes remote commands; file tools use
   SFTP. Keep platform assumptions out of tools and mirror code.
 - `src/v2-bridge.ts`: permission requests; edits include diff previews.
+- `src/backend.ts`: shared remote transport/tools and keyed instruction context.
+- `src/runtime.ts`, `src/runtime-router.ts`: opt-in session-specific RPC routing;
+  failed/restored remote sessions block local fallback. Runtime mirrors are isolated.
+- `src/cli.ts`: caller-agent capture, runtime connection, and local service attachment.
 - `launchers/`: stable local session directories, not remote configuration.
 
 Keep the remote dependency-free beyond SSH and its shell. Preserve BOMs and line

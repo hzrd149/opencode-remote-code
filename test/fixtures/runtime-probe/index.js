@@ -1,4 +1,4 @@
-// Loaded only by runtime-host.mjs. No model or provider is involved.
+// Loaded only by the runtime/CLI host tests. No model or provider is involved.
 import fs from "node:fs/promises"
 import { Plugin } from "@opencode/plugin"
 import { RemoteRuntime } from "../../../dist/rpc.js"

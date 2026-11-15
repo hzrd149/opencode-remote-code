@@ -35,7 +35,7 @@ const env = { ...process.env, SSH_AUTH_SOCK: socket }
 const previousSocket = process.env.SSH_AUTH_SOCK
 let agentPid
 let server
-const clients = new Set()
+const clients = new Set<import("ssh2").Connection>()
 let signatures = 0
 let forwards = 0
 let allowKey = true
@@ -74,7 +74,7 @@ try {
       })
       session.on("sftp", accept => {
         const sftp = accept()
-        sftp.on("REALPATH", id => sftp.name(id, [{ filename: "/home/test", longname: "", attrs: {} }]))
+        sftp.on("REALPATH", id => sftp.name(id, [{ filename: "/home/test", longname: "", attrs: { mode: 0o40755, uid: 0, gid: 0, size: 0, atime: 0, mtime: 0 } }]))
       })
     }))
   })

@@ -40,6 +40,7 @@ import type { ChildProcess } from "node:child_process"
 import type { AddressInfo } from "node:net"
 
 export interface MockServerOptions {
+  authorizedKey?: import("ssh2").ParsedKey
   rootDir?: string
   user?: string
   password?: string
@@ -815,6 +816,7 @@ function attachShell(stream) {
  * @param {string} [options.rootDir]  "remote root" directory (default test/tmp/remote)
  * @param {string} [options.user]     required username (default "testuser")
  * @param {string} [options.password] required password (default "testpass")
+ * @param {object} [options.authorizedKey] ssh2 parsed public key for agent integration tests
  * @param {string} [options.host]     listen address (default 127.0.0.1)
  * @param {string} [options.bashPath] bash to use for exec (posix dialect)
  * @param {"posix"|"windows"} [options.dialect] which remote platform to emulate
@@ -899,10 +901,18 @@ export async function startMockServer(options: MockServerOptions = {}) {
           stats.authAttempts++
           log(`auth method=${ctx.method} user=${ctx.username}`)
 
+          if (ctx.method === "publickey" && options.authorizedKey && ctx.username === user) {
+            const key = options.authorizedKey
+            if (ctx.key.data.equals(key.getPublicSSH()) &&
+                (!ctx.signature || key.verify(ctx.blob, ctx.signature, ctx.hashAlgo) === true)) return ctx.accept()
+            stats.authFailures++
+            return ctx.reject()
+          }
+
           if (ctx.method !== "password") {
             // `none` and every other method are refused on purpose.
             log(`rejecting auth method ${ctx.method}`)
-            return ctx.reject(["password"])
+            return ctx.reject(options.authorizedKey ? ["publickey", "password"] : ["password"])
           }
           if (ctx.username !== user || ctx.password !== password) {
             stats.authFailures++
