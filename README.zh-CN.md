@@ -8,7 +8,7 @@
 
 ## 环境要求
 
-- OpenCode V2，兼容 [package.json](package.json) 中的 `@opencode/plugin` 版本。
+- OpenCode 2.2.7+（需要 V2 指令来源元数据），兼容 [package.json](package.json) 中的 `@opencode/plugin` 版本。
 - 插件的 Node 运行环境及测试需要 Node.js 20+。
 - 远端提供 SSH、SFTP 和 POSIX shell；Windows 远端需 OpenSSH for Windows
   和 PowerShell 5.1/7。远端无需 Node.js、Python、Git 或 ripgrep。
@@ -66,6 +66,15 @@ opencode
   清空文件而非删除文件；需要删除时使用 `shell`。
 
 ## 文档
+
+### 远程指令
+
+保留 OpenCode 模型提示词、自定义 agent、skills、Code Mode、MCP 和会话指令。
+仅替换 `core/environment` 和 `core/instructions`：后者整体替换为启动时读取的
+远程根目录 `AGENTS.md`，包括替换本地全局及配置的指令文件。通用规则可放入自定义
+agent 指令。不会自动发现远程子目录指令。generate/compaction 请求含有这些来源时
+也会更新，title 请求不受影响。历史记录不变，可能仍包含旧的本地指令更新；远程
+上下文会明确区分。不再内置模型提示词模板。
 
 以下参考文档使用英文维护：
 

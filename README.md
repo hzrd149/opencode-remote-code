@@ -8,7 +8,7 @@ run over SSH; file tools use SFTP. No remote agent installation is required.
 
 ## Requirements
 
-- OpenCode V2, compatible with the `@opencode/plugin` version in [package.json](package.json).
+- OpenCode 2.2.7+ (V2 instruction-source metadata is required), compatible with the `@opencode/plugin` version in [package.json](package.json).
 - Node.js 20+ for the plugin's Node runtime and tests.
 - A remote SSH server with SFTP and a POSIX shell, or OpenSSH for Windows with
   PowerShell 5.1/7. No remote Node.js, Python, Git, or ripgrep is needed.
@@ -70,6 +70,18 @@ use that in place of the local checkout path.
   `patch` delete hunks empty files rather than remove them; use `shell` to delete.
 
 ## Documentation
+
+### Remote instructions
+
+OpenCode's model prompts, custom agents, skills, Code Mode, MCP guidance and session
+instruction entries are preserved. The plugin replaces `core/environment` with remote
+OS/shell/workspace details and `core/instructions` with the remote root `AGENTS.md`,
+read once at setup. This replaces the entire discovered-file source, including local
+global/configured instruction files; use custom agent instructions for shared policies.
+Nested remote instruction discovery is not automatic. Generate/compaction requests
+receive the same edits when they contain these sources; title prompts are untouched.
+Stored history is unchanged, so old local instruction updates can remain in the transcript;
+the remote context explicitly distinguishes them. No model prompt templates are bundled.
 
 - [Configuration](docs/configuration.md): options, SSH syntax, paths, search limits.
 - [Usage and troubleshooting](docs/usage.md): launchers, installation, tool behavior,

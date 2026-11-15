@@ -115,6 +115,7 @@ if (options.help) {
  * assertions and finish in well under a second each.
  */
 const UNIT_SUITES = [
+  { script: "system-prompt.ts", label: "remote context suite", slow: false },
   { script: "remote-path.ts", label: "remote path suite", slow: false },
   { script: "dialect.ts", label: "dialect suite", slow: false },
   { script: "glob-matcher.ts", label: "glob matcher suite", slow: false },

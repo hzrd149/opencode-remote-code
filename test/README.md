@@ -31,7 +31,7 @@ run on every host; real Windows long-path round trips require a Windows host.
 
 Suites can also run individually, for example `pnpm exec tsx test/dialect.ts`.
 
-The TypeScript harness and postbuild script run through the development-only
+The TypeScript harness runs through the development-only
 `tsx` runner on Node 20 and newer; native Node TypeScript support is not required.
 `pnpm run lint` checks both `src/` and the harness (`tsconfig.tools.json`). The
 harness uses relaxed compiler settings for its dynamic protocol/plugin fakes,
@@ -46,6 +46,7 @@ the TypeScript runner are shipped as runtime dependencies.
 
 | Suites | Coverage |
 | --- | --- |
+| `system-prompt` | V2 source metadata, custom agents, skills/Code Mode preservation, remote POSIX/Windows context, idempotence and conflicting hooks |
 | `remote-path`, `path-mapper` | POSIX/Windows paths, containment, mirror namespaces |
 | `dialect` | Command encoding, staging, cleanup, output decoding |
 | `glob-matcher`, `remote-walk` | Patterns, traversal/search budgets, SFTP errors |

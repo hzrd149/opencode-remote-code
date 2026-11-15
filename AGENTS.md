@@ -1,6 +1,6 @@
 # Remote Code — contributor guide
 
-OpenCode V2 plugin (`@opencode/plugin` ^2.1.2) providing SSH-backed tools for
+OpenCode V2 plugin (`@opencode/plugin` ^2.2.7) providing SSH-backed tools for
 POSIX and Windows remotes. See `README.md` for configuration and usage and
 `test/README.md` for the test harness.
 
@@ -14,8 +14,8 @@ pnpm test
 npm pack --dry-run
 ```
 
-`pnpm test` builds before testing: suites import `dist/`. `pnpm run build` also copies prompt
-fragments via `scripts/postbuild.ts`; running `tsc` alone is insufficient.
+`pnpm test` builds before testing: suites import `dist/`. `pnpm run build` cleans stale output
+and compiles TypeScript; there are no runtime prompt assets to copy.
 Windows integration tests require Windows with PowerShell; `pnpm test` exercises
 both dialects there and POSIX on Linux/macOS. Build first when running individual
 suites directly. See the test guide for host requirements.
