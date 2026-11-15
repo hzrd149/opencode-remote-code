@@ -20,6 +20,10 @@
     "./server": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./rpc": {
+      "types": "./dist/rpc.d.ts",
+      "import": "./dist/rpc.js"
     }
   },
   "files": [
