@@ -69,7 +69,19 @@ The installed executable is `remote-opencode`. It captures the terminal's
 `SSH_AUTH_SOCK`, creates a stable local session directory, connects through typed
 RPC, and attaches to that session. No model call is needed to connect.
 In-session controls are `/remote status`, `/remote disconnect`, and
-`/remote connect {"ssh":"alice@server.example","workdir":"/srv/project"}`.
+`/remote connect alice@server.example --workdir /srv/project`.
+Host-only connections such as `/remote connect server.example` or
+`/remote connect 192.168.1.20` default to your local OS username and the remote
+login home (resolved over SFTP). Quote paths with spaces:
+`/remote connect alice@host --workdir '/path with spaces'`.
+Use `--port 2222`, `--user alice`, `--agent-socket /path/to/agent`, or `--key /path/to/key`
+as needed. The CLI accepts the same target options (`--agent-socket` overrides its
+calling terminal's `SSH_AUTH_SOCK`); the slash command uses the service's configured
+authentication unless explicitly overridden. IPv6 may be bare or bracketed
+(`alice@[::1]`); specify ports separately with `--port`, never `host:port`.
+Arguments support quotes and backslash escapes, with no shell evaluation or
+variable expansion. `/remote connect --help` shows usage. The previous JSON target
+form remains supported; passwords must use RPC rather than slash-command text.
 Connections are session-specific; interrupted or failed remote sessions block
 file/shell tools until reconnect or explicit disconnect. Passwords use RPC,
 not slash-command text. Remote subagent delegation is disabled.
@@ -130,7 +142,7 @@ directory at `tmp_test_artifacts/dev`; your usual providers and credentials rema
 available. Inside the session, connect to a remote:
 
 ```text
-/remote connect {"ssh":"alice@server.example","workdir":"/srv/project"}
+/remote connect alice@server.example --workdir /srv/project
 ```
 
 Use your terminal's SSH agent, or add `"key":"~/.ssh/id_ed25519"` to the connection

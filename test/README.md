@@ -24,6 +24,8 @@ pnpm exec tsx test/cli-host.ts
 Build first; these require `opencode` on PATH (or `OPENCODE_BIN`) and POSIX
 OpenSSH tools. The CLI test verifies the caller agent overrides a stale service
 agent and failed connections cannot fall back to local file execution.
+The runtime host test also exercises `/remote connect` with host-only defaults
+(local OS username and SFTP login home), quoted workdirs, and legacy JSON input.
 
 | Option | Effect |
 | --- | --- |

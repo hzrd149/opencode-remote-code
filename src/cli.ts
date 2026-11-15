@@ -6,6 +6,8 @@ import path from "node:path"
 import { OpenCode } from "@opencode/client"
 import { Service, type Endpoint } from "@opencode/client/service"
 import { RemoteRuntime, type RuntimeTarget } from "./rpc.js"
+import { parseArguments, type Arguments } from "./target-arguments.js"
+export { parseArguments, type Arguments } from "./target-arguments.js"
 
 export const HELP = `Usage: remote-opencode [user@]host [options]
 
@@ -13,6 +15,7 @@ export const HELP = `Usage: remote-opencode [user@]host [options]
   --user USER       SSH user (default: local OS user)
   --port PORT       SSH port (default: 22)
   --key PATH        Local private key instead of the calling terminal's SSH agent
+  --agent-socket PATH  Explicit local SSH agent socket (default: SSH_AUTH_SOCK)
   --session ID      Reconnect an existing session for this target
   --help           Show this help
 
@@ -20,47 +23,6 @@ Requires OpenCode V2 on PATH and the plugin registered with options.runtime=true
 Use a real hostname/IP: SSH config aliases, ProxyJump and ProxyCommand are not read.
 The engine and credentials stay local. No remote OpenCode server is required.
 `
-
-export interface Arguments {
-  host: string
-  user: string
-  port: number
-  workdir: string
-  key?: string
-  sessionID?: string
-}
-
-export function parseArguments(args: string[]): Arguments | undefined {
-  if (args.length === 1 && ["--help", "-h"].includes(args[0])) return
-  let host: string | undefined
-  const values = new Map<string, string>()
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i]
-    if (arg.startsWith("-")) {
-      if (!["--workdir", "--user", "--port", "--key", "--session"].includes(arg)) throw new Error(`Unknown option: ${arg}`)
-      const value = args[++i]
-      if (!value || value.startsWith("--") || value.includes("\0")) throw new Error(`Missing or invalid value for ${arg}`)
-      if (values.has(arg)) throw new Error(`Repeated option: ${arg}`)
-      values.set(arg, value)
-    } else {
-      if (host) throw new Error("Expected one SSH host")
-      host = arg
-    }
-  }
-  if (!host) throw new Error("An SSH host is required; use --help for usage")
-  const match = /^(?:([^@\s]+)@)?(\[[0-9a-fA-F:]+\]|[a-zA-Z0-9_.:-]+)$/.exec(host)
-  if (!match || match[2].startsWith("-")) throw new Error("Use [user@]hostname or an IP address, not an SSH command or URL")
-  if (match[1] && values.has("--user") && match[1] !== values.get("--user")) throw new Error("Conflicting SSH users")
-  const portText = values.get("--port") ?? "22"
-  const port = Number(portText)
-  if (!/^\d+$/.test(portText) || port < 1 || port > 65535) throw new Error("Port must be an integer from 1 to 65535")
-  const user = values.get("--user") ?? match[1] ?? os.userInfo().username
-  if (/\s|\0/.test(user)) throw new Error("Invalid SSH user")
-  const sessionID = values.get("--session")
-  if (sessionID && !/^ses[\w-]+$/.test(sessionID)) throw new Error("Invalid session ID")
-  return { host: match[2].replace(/^\[|\]$/g, ""), user, port,
-    workdir: values.get("--workdir") ?? "~", key: values.get("--key"), sessionID }
-}
 
 export function sessionDirectory(options: Arguments, home = os.homedir()): string {
   const hash = createHash("sha256").update(JSON.stringify([options.host, options.port, options.user, options.workdir])).digest("hex").slice(0, 20)
@@ -108,7 +70,7 @@ export async function runCLI(args: string[], overrides: Partial<Dependencies> = 
   const target: RuntimeTarget = { host: options.host, user: options.user, port: options.port, workdir: options.workdir }
   if (options.key) target.key = path.resolve(options.key.startsWith("~/") ? path.join(deps.home, options.key.slice(2)) : options.key)
   else {
-    const socket = deps.env.SSH_AUTH_SOCK
+    const socket = options.agentSocket ?? deps.env.SSH_AUTH_SOCK
     if (!socket?.trim() || socket.includes("\0")) throw new Error("No SSH_AUTH_SOCK in this terminal; start/unlock an SSH agent or use --key")
     target.agentSocket = socket
   }

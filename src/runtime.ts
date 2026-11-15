@@ -6,6 +6,9 @@ import { loadConfig, isWithinActivateIn } from "./config.js"
 import { RuntimeRouter } from "./runtime-router.js"
 import { RemoteRuntime, RuntimeTargetSchema, type RuntimeConnectInput, type RuntimeSessionInput, type RuntimeStatus } from "./rpc.js"
 import type { PluginContext } from "./v2-bridge.js"
+import { parseArguments, splitArguments } from "./target-arguments.js"
+
+const REMOTE_HELP = "Usage: /remote connect [user@]host [--workdir PATH] [--user USER] [--port PORT] [--agent-socket PATH | --key PATH] | status | disconnect\nUser defaults to the local OS user; workdir defaults to the remote login home. Quote paths containing spaces. Ports require --port; IPv6 may be bare or bracketed. No shell expansion is performed."
 
 type Backend = Awaited<ReturnType<typeof createRemoteBackend>>
 const NAMES = ["shell", "glob", "grep", "read", "write", "edit", "patch"]
@@ -149,13 +152,21 @@ export async function setupRuntime(ctx: PluginContext) {
     }))
     registrations.push(await ctx.command.transform(editor => {
       editor.add({
-        name: "remote", description: "Remote target: connect <JSON target> | status | disconnect",
+        name: "remote", description: "Remote target: connect [user@]host [--workdir PATH] [--port PORT] [--agent-socket PATH | --key PATH] | status | disconnect",
         async execute({ sessionID, prompt }) {
           const text = prompt.text.trim()
           const action = text.split(/\s+/, 1)[0]
           let result: RuntimeStatus
           if (action === "connect") {
-            const target = JSON.parse(text.slice(action.length).trim())
+            const input = text.slice(action.length).trim()
+            if (["--help", "-h"].includes(input)) {
+              await ctx.session.synthetic({ sessionID, text: REMOTE_HELP, resume: false })
+              return
+            }
+            const options = input.startsWith("{") ? undefined : parseArguments(splitArguments(input), false)
+            const target = options
+              ? Object.fromEntries(Object.entries(options).filter(([key, value]) => key !== "sessionID" && value !== undefined))
+              : JSON.parse(input)
             if (!target || typeof target !== "object" || Array.isArray(target)) throw new Error("Expected a JSON target object")
             for (const [key, value] of Object.entries(target)) {
               if (!Object.hasOwn(RuntimeTargetSchema.properties, key)) throw new Error(`Unknown target field: ${key}`)
@@ -166,7 +177,7 @@ export async function setupRuntime(ctx: PluginContext) {
             result = await api.connect({ sessionID, target })
           } else if (action === "status") result = await api.status({ sessionID })
           else if (action === "disconnect") result = await api.disconnect({ sessionID })
-          else throw new Error('Usage: /remote connect {"ssh":"user@host","workdir":"~/project"} | status | disconnect')
+          else throw new Error(REMOTE_HELP)
           await ctx.session.synthetic({ sessionID, text: `Remote Code: ${JSON.stringify(result)}`, resume: false })
         },
       })

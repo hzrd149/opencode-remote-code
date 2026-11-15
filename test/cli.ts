@@ -1,6 +1,8 @@
 import assert from "node:assert/strict"
 import fs from "node:fs/promises"
 import path from "node:path"
+import os from "node:os"
+import { splitArguments } from "../dist/target-arguments.js"
 import { fileURLToPath } from "node:url"
 import { parseArguments, sessionDirectory, assertLocalEndpoint, runCLI, attach } from "../dist/cli.js"
 
@@ -10,6 +12,21 @@ assert.equal(parsed.user, "alice")
 assert.equal(parsed.workdir, "C:/My Project")
 assert.equal(parsed.port, 2222)
 assert.equal(parseArguments(["--help"]), undefined)
+for (const host of ["server.example", "192.168.1.20", "::1", "[::ffff:192.0.2.1]"]) {
+  const defaults = parseArguments([host])
+  assert.equal(defaults.user, os.userInfo().username)
+  assert.equal(defaults.workdir, "~")
+  assert.equal(defaults.port, 22)
+}
+const quoted = parseArguments(splitArguments(`alice@host --workdir '/path with spaces' --agent-socket "/agent socket"`), false)
+assert.equal(quoted.workdir, "/path with spaces")
+assert.equal(quoted.agentSocket, "/agent socket")
+assert.deepEqual(splitArguments(`a\\ b 'literal $HOME $(id)' "C:\\Users\\alice" '' ab"cd"`),
+  ["a b", "literal $HOME $(id)", "C:\\Users\\alice", "", "abcd"])
+for (const text of ["'unfinished", '"unfinished', "trailing\\"]) assert.throws(() => splitArguments(text), /quote|escape/)
+for (const text of ["host:22", "[::1]:22", "[abcd]", "host --workdir", "host --unknown x", "host --session ses_test", "host --key k --agent-socket a"]) {
+  assert.throws(() => parseArguments(splitArguments(text), false), undefined, text)
+}
 for (const args of [[], ["host", "--workdir"], ["host", "--port", "0"], ["host", "--port", "1e3"],
   ["host", "--port", "65536"], ["host", "--server", "http://elsewhere"], ["host", "--", "--standalone"],
   ["host", "extra"], ["a@host", "--user", "b"], ["ssh://host"], ["host", "--workdir", "a", "--workdir", "b"]]) {
