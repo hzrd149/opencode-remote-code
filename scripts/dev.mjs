@@ -76,7 +76,7 @@ async function launchRemote() {
 }
 
 function launchInteractive() {
-  console.error("Starting OpenCode with the local build. Connect using /remote connect {\"ssh\":\"user@host\",\"workdir\":\"/remote/path\"}")
+  console.error("Starting OpenCode with the local build. Connect using /remote connect user@host --workdir /remote/path")
   const child = spawn("opencode", [directory, "--standalone"], {
     cwd: directory,
     env: process.env,
